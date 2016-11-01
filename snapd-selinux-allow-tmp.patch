@@ -1,0 +1,16 @@
+diff --git a/snappy.te b/snappy.te
+index 4817321..77e7d45 100644
+--- a/snappy.te
++++ b/snappy.te
+@@ -114,6 +114,11 @@ gen_require(` type unlabeled_t; ')
+ allow snappy_t unlabeled_t:dir { getattr search };
+ allow snappy_t unlabeled_t:file { getattr open read };
+ 
++# Grant snapd access to /tmp
++gen_require(` type tmp_t; ')
++allow snappy_t tmp_t:dir { add_name create read remove_name rmdir write };
++allow snappy_t tmp_t:file { create open unlink write };
++
+ 
+ logging_send_syslog_msg(snappy_t);
+ 
