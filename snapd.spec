@@ -28,7 +28,7 @@
 
 # SELinux policy globals
 %global polmodname snapcore-selinux
-%global commit1 6331fd4a058271b0246714bc6746ab1e7ce2aa09
+%global commit1 480150999a3af69010d6e1ed34ef386fb46601fa
 %global shortcommit1 %(c=%{commit1}; echo ${c:0:7})
 %global snapdate 20161101
 %global polmodfolder %{polmodname}-%{commit1}-%{commit1}
@@ -47,9 +47,6 @@ Patch2:         0001-docs-Fix-binary-path-referenced-in-documentation.patch
 # snapcore SELinux policy
 Source1:        https://gitlab.com/Conan_Kudo/snapcore-selinux/repository/archive.tar.gz?ref=%{commit1}#/%{polmodname}-%{shortcommit1}.tar.gz
 
-# SELinux policy patches
-# This patch grants snapd access to /tmp, which should no longer be necessary in 2.17
-Patch500:       snapd-selinux-allow-tmp.patch
 
 
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -148,9 +145,6 @@ providing packages with %{import_path} prefix.
 
 # Extract source for SELinux policy module
 tar xvf %{SOURCE1}
-pushd ./%{polmodfolder}
-%patch500 -p1 -b .allowtmp
-popd
 
 
 %build
@@ -332,7 +326,7 @@ fi
 %changelog
 * Wed Oct 19 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.16-1
 - New upstream release
-- Patch SELinux policy to allow access to /tmp
+- Sync to latest selinux policy (20161101~git4801509)
 * Tue Oct 18 2016 Neal Gompa <ngompa13@gmail.com> - 2.14-2
 - Add SELinux policy module subpackage
 * Tue Aug 30 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.14-1
