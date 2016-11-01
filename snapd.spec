@@ -44,6 +44,7 @@ Source0:        https://%{provider_prefix}/archive/%{version}/%{name}-%{version}
 Patch0:         0001-dist-Add-generic-systemd-units.patch
 Patch1:         0001-dirs-FEDORA-use-alternate-snap-mount-directory.patch
 Patch2:         0001-docs-Fix-binary-path-referenced-in-documentation.patch
+Patch3:         0001-Fix-LibExecDir-on-Fedora.patch
 # snapcore SELinux policy
 Source1:        https://gitlab.com/Conan_Kudo/snapcore-selinux/repository/archive.tar.gz?ref=%{commit1}#/%{polmodname}-%{shortcommit1}.tar.gz
 
@@ -142,6 +143,7 @@ providing packages with %{import_path} prefix.
 %patch0 -p1 -b .systemd
 %patch1 -p1 -b .snapdir
 %patch2 -p1 -b .docfix
+%patch3 -p1 -b .libexecdir
 
 # Extract source for SELinux policy module
 tar xvf %{SOURCE1}

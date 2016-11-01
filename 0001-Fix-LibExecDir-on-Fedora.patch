@@ -1,0 +1,23 @@
+From 971f576779e6af0c8d5a37162d7d055a42c01175 Mon Sep 17 00:00:00 2001
+From: Zygmunt Krynicki <me@zygoon.pl>
+Date: Tue, 1 Nov 2016 23:32:57 +0200
+Subject: [PATCH] Fix LibExecDir on Fedora
+
+---
+ dirs/dirs.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/dirs/dirs.go b/dirs/dirs.go
+index 36e3b54..5ceb5f6 100644
+--- a/dirs/dirs.go
++++ b/dirs/dirs.go
+@@ -144,5 +144,5 @@ func SetRootDir(rootdir string) {
+ 	LocaleDir = filepath.Join(rootdir, "/usr/share/locale")
+ 	ClassicDir = filepath.Join(rootdir, "/writable/classic")
+ 
+-	LibExecDir = filepath.Join(rootdir, "/usr/lib/snapd")
++	LibExecDir = filepath.Join(rootdir, "/usr/libexec/snapd")
+ }
+-- 
+2.7.4
+
