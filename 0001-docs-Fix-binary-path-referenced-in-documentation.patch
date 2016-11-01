@@ -1,0 +1,23 @@
+From 8a5383ee953617a0c03b1684c1d7325e4e15e918 Mon Sep 17 00:00:00 2001
+From: Neal Gompa <ngompa13@gmail.com>
+Date: Fri, 28 Oct 2016 09:15:19 -0400
+Subject: [PATCH] docs: Fix binary path referenced in documentation
+
+Signed-off-by: Neal Gompa <ngompa13@gmail.com>
+
+diff --git a/docs/security.md b/docs/security.md
+index 259a829..f024a0e 100644
+--- a/docs/security.md
++++ b/docs/security.md
+@@ -187,7 +187,7 @@ If there are no seccomp violations, seccomp isn't blocking the snap.
+ The `snappy-debug` snap can be used to help with policy violations. To use it:
+ 
+     $ sudo snap install snappy-debug
+-    $ sudo /snap/bin/snappy-debug.security scanlog foo
++    $ sudo /var/lib/snapd/snap/bin/snappy-debug.security scanlog foo
+ 
+ This will:
+ 
+-- 
+2.8.4 (Apple Git-73)
+
