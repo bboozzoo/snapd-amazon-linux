@@ -28,9 +28,9 @@
 
 # SELinux policy globals
 %global polmodname snapcore-selinux
-%global commit1 2d76c7e42b07334878c688d19cde773caf6e97d6
+%global commit1 602c0fec70dce7451164892a4ad05b6202b56081
 %global shortcommit1 %(c=%{commit1}; echo ${c:0:7})
-%global snapdate 20161101
+%global snapdate 20161102
 %global polmodfolder %{polmodname}-%{commit1}-%{commit1}
 
 
@@ -330,7 +330,6 @@ fi
 %changelog
 * Wed Oct 19 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.16-1
 - New upstream release
-- Sync to latest selinux policy (20161101~git4801509)
 * Tue Oct 18 2016 Neal Gompa <ngompa13@gmail.com> - 2.14-2
 - Add SELinux policy module subpackage
 * Tue Aug 30 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.14-1
