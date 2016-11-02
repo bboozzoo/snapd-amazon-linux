@@ -1,20 +1,21 @@
-From 83f08959d1bfaadc05581703780534ed5ed7ba82 Mon Sep 17 00:00:00 2001
+From 579ae49d1b76552d93301745009dd9cefd9e8054 Mon Sep 17 00:00:00 2001
 From: Zygmunt Krynicki <me@zygoon.pl>
 Date: Wed, 2 Nov 2016 12:37:37 +0200
 Subject: [PATCH] Set a context on the mount units
 
 ---
- systemd/systemd.go | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ systemd/systemd.go | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
 diff --git a/systemd/systemd.go b/systemd/systemd.go
-index a3f6c9e..32e0ebb 100644
+index a3f6c9e..a2bd14a 100644
 --- a/systemd/systemd.go
 +++ b/systemd/systemd.go
-@@ -438,14 +438,20 @@ func MountUnitPath(baseDir, ext string) string {
+@@ -437,15 +437,20 @@ func MountUnitPath(baseDir, ext string) string {
+ }
  
  func (s *systemd) WriteMountUnitFile(name, what, where, fstype string) (string, error) {
- 	extra := ""
+-	extra := ""
 +	var options []string
 +	var extra string
  	if osutil.IsDirectory(what) {
