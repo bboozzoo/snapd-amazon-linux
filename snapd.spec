@@ -28,7 +28,7 @@
 
 # SELinux policy globals
 %global polmodname snapcore-selinux
-%global commit1 602c0fec70dce7451164892a4ad05b6202b56081
+%global commit1 e5c1177765b41f9e88b745f5483cc323743b7757
 %global shortcommit1 %(c=%{commit1}; echo ${c:0:7})
 %global snapdate 20161102
 %global polmodfolder %{polmodname}-%{commit1}-%{commit1}
