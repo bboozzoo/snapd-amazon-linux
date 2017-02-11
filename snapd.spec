@@ -36,7 +36,7 @@
 
 Name:           snapd
 Version:        2.16
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -328,6 +328,9 @@ fi
 
 
 %changelog
+* Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.16-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
+
 * Wed Oct 19 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.16-1
 - New upstream release
 * Tue Oct 18 2016 Neal Gompa <ngompa13@gmail.com> - 2.14-2
