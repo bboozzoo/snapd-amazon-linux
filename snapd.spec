@@ -11,6 +11,9 @@
 %global with_check 0
 %global with_unit_test 0
 
+# For the moment, we don't support all golang arches...
+%global with_goarches 0
+
 %if ! %{with vendorized}
 %global with_bundled 0
 %else
@@ -64,17 +67,26 @@ Patch0008:      0008-partition-skip-some-tests-if-grub-editenv-is-not-ava.patch
 Patch0009:      0001-data-selinux-Add-context-definition-for-snapctl.patch
 # Upstream merged: https://github.com/snapcore/snapd/pull/3094
 Patch0010:      0001-cmd-rework-header-check-for-xfs-xqm.patch
+# No upstream status yet
+Patch0011:      0001-cmd-snap-confine-hardcode-constants-from-xfs-xqm.h-f.patch
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3084
 Patch1001:      PR3084-packaging-use-templates-for-systemd-units.patch
 
+%if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
 ExclusiveArch:  %{?go_arches:%{go_arches}}%{!?go_arches:%{ix86} x86_64 %{arm}}
+%else
+# Verified arches from snapd upstream
+ExclusiveArch:  %{ix86} x86_64 %{arm} aarch64 ppc64le s390x
+%endif
+
 # If go_compiler is not set to 1, there is no virtual provide. Use golang instead.
 BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
 # BuildRequires:  systemd-units
 BuildRequires:  systemd
 %{?systemd_requires}
+
 Requires:       snap-confine%{?_isa} = %{version}-%{release}
 Requires:       squashfs-tools
 # we need squashfs.ko loaded
@@ -553,6 +565,7 @@ fi
 - Rediff patches
 - Re-enable seccomp
 - Fix building snap-confine on 32-bit arches
+- Set ExclusiveArch based on upstream supported arch list
 
 * Wed Mar 29 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.5-1
 - Rebase to snapd 2.23.5
