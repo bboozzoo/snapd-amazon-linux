@@ -52,7 +52,7 @@ Patch0001:      0001-cmd-link-libcap-dynamically.patch
 Patch0002:      0002-cmd-remove-unused-variable.patch
 # Upstream merged: https://github.com/snapcore/snapd/pull/2989
 Patch0003:      0003-cmd-add-directive-for-shellcheck-and-follow-source.patch
-# No known status
+# Upstream pproposed PR: https://github.com/snapcore/snapd/pull/3108
 Patch0004:      0004-cmd-use-libtool-for-the-internal-library.patch
 # Upstream merged: https://github.com/snapcore/snapd/pull/2989
 Patch0006:      0006-errtracker-fix-testing-outside-of-ubuntu.patch
