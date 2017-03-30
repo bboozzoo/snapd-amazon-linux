@@ -62,6 +62,8 @@ Patch0007:      0007-osutil-HACK-use-usr-bin-true-false.patch
 Patch0008:      0008-partition-skip-some-tests-if-grub-editenv-is-not-ava.patch
 # Upstream merged: https://github.com/snapcore/snapd/pull/3081
 Patch0009:      0001-data-selinux-Add-context-definition-for-snapctl.patch
+# Upstream merged: https://github.com/snapcore/snapd/pull/3094
+Patch0010:      0001-cmd-rework-header-check-for-xfs-xqm.patch
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3084
 Patch1001:      PR3084-packaging-use-templates-for-systemd-units.patch
@@ -550,6 +552,7 @@ fi
 - Rebase to snapd 2.23.6
 - Rediff patches
 - Re-enable seccomp
+- Fix building snap-confine on 32-bit arches
 
 * Wed Mar 29 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.5-1
 - Rebase to snapd 2.23.5
