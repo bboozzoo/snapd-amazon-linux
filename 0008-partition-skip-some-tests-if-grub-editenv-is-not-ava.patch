@@ -1,0 +1,44 @@
+From 0944e02cabdd41e5f01ff3e0556aa28e4fa31b8b Mon Sep 17 00:00:00 2001
+From: Zygmunt Krynicki <zygmunt.krynicki@canonical.com>
+Date: Mon, 6 Mar 2017 23:30:19 +0100
+Subject: [PATCH 8/8] partition: skip some tests if grub-editenv is not
+ available
+
+Signed-off-by: Zygmunt Krynicki <zygmunt.krynicki@canonical.com>
+---
+ partition/grub_test.go | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/partition/grub_test.go b/partition/grub_test.go
+index b64d0b8..5fc5fd4 100644
+--- a/partition/grub_test.go
++++ b/partition/grub_test.go
+@@ -28,6 +28,7 @@ import (
+ 	. "gopkg.in/check.v1"
+ 
+ 	"github.com/snapcore/snapd/dirs"
++	"github.com/snapcore/snapd/osutil"
+ )
+ 
+ func grubEnvPath() string {
+@@ -35,11 +36,17 @@ func grubEnvPath() string {
+ }
+ 
+ func grubEditenvSet(c *C, key, value string) {
++	if !osutil.FileExists("/usr/bin/grub-editenv") {
++		c.Skip("/usr/bin/grub-editenv is not available")
++	}
+ 	_, err := runCommand("/usr/bin/grub-editenv", grubEnvPath(), "set", fmt.Sprintf("%s=%s", key, value))
+ 	c.Assert(err, IsNil)
+ }
+ 
+ func grubEditenvGet(c *C, key string) string {
++	if !osutil.FileExists("/usr/bin/grub-editenv") {
++		c.Skip("/usr/bin/grub-editenv is not available")
++	}
+ 	output, err := runCommand("/usr/bin/grub-editenv", grubEnvPath(), "list")
+ 	c.Assert(err, IsNil)
+ 	cfg := goconfigparser.New()
+-- 
+2.10.2
+

@@ -1,0 +1,30 @@
+From 2003224f27faebf667f091bb0f894deba8584e2d Mon Sep 17 00:00:00 2001
+From: Zygmunt Krynicki <me@zygoon.pl>
+Date: Mon, 6 Mar 2017 23:07:24 +0100
+Subject: [PATCH 7/7] osutil: HACK: use /usr/bin/{true,false}
+
+This patch should not be applied upstream. This is a Debian vs OpenSUSE
+delta. Ideally we'd do the golang equvalent of $(realpath /bin/false)
+but I was in a hurry.
+
+Signed-off-by: Zygmunt Krynicki <me@zygoon.pl>
+---
+ osutil/buildid_test.go | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/osutil/buildid_test.go b/osutil/buildid_test.go
+index b11a2e7..9ef574b 100644
+--- a/osutil/buildid_test.go
++++ b/osutil/buildid_test.go
+@@ -46,7 +46,7 @@ func buildID(c *C, fname string) string {
+ }
+ 
+ func (s *buildIDSuite) TestReadBuildID(c *C) {
+-	for _, fname := range []string{"/bin/true", "/bin/false"} {
++	for _, fname := range []string{"/usr/bin/true", "/usr/bin/false"} {
+ 
+ 		id, err := osutil.ReadBuildID(fname)
+ 		c.Assert(err, IsNil)
+-- 
+2.10.2
+

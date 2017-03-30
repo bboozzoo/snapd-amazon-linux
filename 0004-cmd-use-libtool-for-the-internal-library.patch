@@ -1,0 +1,124 @@
+From 503fcca67d3c537cae756f6f3fe88619e1097ff5 Mon Sep 17 00:00:00 2001
+From: Zygmunt Krynicki <me@zygoon.pl>
+Date: Mon, 6 Mar 2017 20:26:26 +0100
+Subject: [PATCH 4/7] cmd: use libtool for the internal library
+
+This just cuts some hassle integration with how the helper library is
+built. I could never get to pass the right -fPIC/-fpie combination
+otherwise.
+
+Signed-off-by: Zygmunt Krynicki <me@zygoon.pl>
+---
+ cmd/Makefile.am  | 22 +++++++++++-----------
+ cmd/configure.ac |  3 ++-
+ 2 files changed, 13 insertions(+), 12 deletions(-)
+
+diff --git a/cmd/Makefile.am b/cmd/Makefile.am
+index 574886c..0733d85 100644
+--- a/cmd/Makefile.am
++++ b/cmd/Makefile.am
+@@ -4,7 +4,7 @@ TESTS =
+ libexec_PROGRAMS =
+ dist_man_MANS =
+ noinst_PROGRAMS =
+-noinst_LIBRARIES =
++noinst_LTLIBRARIES =
+ 
+ subdirs = snap-confine snap-discard-ns system-shutdown libsnap-confine-private snap-update-ns
+ 
+@@ -58,12 +58,12 @@ hack: snap-confine/snap-confine snap-confine/snap-confine.apparmor
+ 	sudo apparmor_parser -r snap-confine/snap-confine.apparmor
+ 
+ ##
+-## libsnap-confine-private.a
++## libsnap-confine-private.la
+ ##
+ 
+-noinst_LIBRARIES += libsnap-confine-private.a
++noinst_LTLIBRARIES += libsnap-confine-private.la
+ 
+-libsnap_confine_private_a_SOURCES = \
++libsnap_confine_private_la_SOURCES = \
+ 	libsnap-confine-private/classic.c \
+ 	libsnap-confine-private/classic.h \
+ 	libsnap-confine-private/cleanup-funcs.c \
+@@ -118,7 +118,7 @@ noinst_PROGRAMS += decode-mount-opts/decode-mount-opts
+ 
+ decode_mount_opts_decode_mount_opts_SOURCES = \
+ 	decode-mount-opts/decode-mount-opts.c
+-decode_mount_opts_decode_mount_opts_LDADD = libsnap-confine-private.a
++decode_mount_opts_decode_mount_opts_LDADD = libsnap-confine-private.la
+ decode_mount_opts_decode_mount_opts_LDADD += -lcap
+ ##
+ ## snap-confine
+@@ -184,7 +184,7 @@ snap_confine_snap_confine_SOURCES = \
+ 
+ snap_confine_snap_confine_CFLAGS = -Wall -Werror $(AM_CFLAGS)
+ snap_confine_snap_confine_LDFLAGS = $(AM_LDFLAGS)
+-snap_confine_snap_confine_LDADD = libsnap-confine-private.a
++snap_confine_snap_confine_LDADD = libsnap-confine-private.la
+ snap_confine_snap_confine_CFLAGS += $(LIBUDEV_CFLAGS)
+ snap_confine_snap_confine_LDADD += $(LIBUDEV_LIBS)
+ snap_confine_snap_confine_LDADD += -lcap
+@@ -314,7 +314,7 @@ snap_discard_ns_snap_discard_ns_SOURCES = \
+ 	snap-discard-ns/snap-discard-ns.c
+ snap_discard_ns_snap_discard_ns_CFLAGS = -Wall -Werror $(AM_CFLAGS)
+ snap_discard_ns_snap_discard_ns_LDFLAGS = $(AM_LDFLAGS)
+-snap_discard_ns_snap_discard_ns_LDADD = libsnap-confine-private.a
++snap_discard_ns_snap_discard_ns_LDADD = libsnap-confine-private.la
+ 
+ if APPARMOR
+ snap_discard_ns_snap_discard_ns_CFLAGS += $(APPARMOR_CFLAGS)
+@@ -335,7 +335,7 @@ system_shutdown_system_shutdown_SOURCES = \
+ 	system-shutdown/system-shutdown-utils.c \
+ 	system-shutdown/system-shutdown-utils.h \
+ 	system-shutdown/system-shutdown.c
+-system_shutdown_system_shutdown_LDADD = libsnap-confine-private.a
++system_shutdown_system_shutdown_LDADD = libsnap-confine-private.la
+ system_shutdown_system_shutdown_CFLAGS = $(filter-out -fPIE -pie,$(CFLAGS)) -static
+ system_shutdown_system_shutdown_LDFLAGS = $(filter-out -fPIE -pie,$(LDFLAGS)) -static
+ 
+@@ -345,7 +345,7 @@ system_shutdown_system_shutdown_unit_tests_SOURCES = \
+ 	libsnap-confine-private/unit-tests-main.c \
+ 	libsnap-confine-private/unit-tests.c \
+ 	system-shutdown/system-shutdown-utils-test.c
+-system_shutdown_system_shutdown_unit_tests_LDADD = libsnap-confine-private.a
++system_shutdown_system_shutdown_unit_tests_LDADD = libsnap-confine-private.la
+ system_shutdown_system_shutdown_unit_tests_CFLAGS = $(GLIB_CFLAGS)
+ system_shutdown_system_shutdown_unit_tests_LDADD +=  $(GLIB_LIBS)
+ endif
+@@ -359,7 +359,7 @@ dist_man_MANS += snap-update-ns/snap-update-ns.5
+ CLEANFILES += snap-update-ns/snap-update-ns.5
+ EXTRA_DIST += snap-update-ns/snap-update-ns.rst
+ 
+-snap_update_ns_snap_update_ns_LDADD = libsnap-confine-private.a
++snap_update_ns_snap_update_ns_LDADD = libsnap-confine-private.la
+ 
+ snap_update_ns_snap_update_ns_SOURCES = \
+ 	snap-update-ns/snap-update-ns.c \
+@@ -380,7 +380,7 @@ snap_update_ns_unit_tests_SOURCES = \
+ 	snap-update-ns/test-data.h \
+ 	snap-update-ns/test-utils.c \
+ 	snap-update-ns/test-utils.h
+-snap_update_ns_unit_tests_LDADD = libsnap-confine-private.a
++snap_update_ns_unit_tests_LDADD = libsnap-confine-private.la
+ snap_update_ns_unit_tests_CFLAGS = $(GLIB_CFLAGS)
+ snap_update_ns_unit_tests_LDADD +=  $(GLIB_LIBS)
+ endif
+diff --git a/cmd/configure.ac b/cmd/configure.ac
+index 3c921ac..4fb6175 100644
+--- a/cmd/configure.ac
++++ b/cmd/configure.ac
+@@ -11,7 +11,8 @@ AC_PROG_CC_C99
+ AC_PROG_CPP
+ AC_PROG_INSTALL
+ AC_PROG_MAKE_SET
+-AC_PROG_RANLIB
++AC_PROG_LIBTOOL
++AC_CONFIG_MACRO_DIR([m4])
+ 
+ AC_LANG([C])
+ # Checks for libraries.
+-- 
+2.10.2
+

@@ -1,0 +1,25 @@
+From f3cbc4f986d695157ee9f8d38274fe9359051011 Mon Sep 17 00:00:00 2001
+From: Zygmunt Krynicki <me@zygoon.pl>
+Date: Mon, 6 Mar 2017 20:00:09 +0100
+Subject: [PATCH 2/7] cmd: remove unused variable
+
+Signed-off-by: Zygmunt Krynicki <me@zygoon.pl>
+---
+ cmd/libsnap-confine-private/mountinfo.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/cmd/libsnap-confine-private/mountinfo.c b/cmd/libsnap-confine-private/mountinfo.c
+index 9668dd7..2c8311d 100644
+--- a/cmd/libsnap-confine-private/mountinfo.c
++++ b/cmd/libsnap-confine-private/mountinfo.c
+@@ -284,7 +284,6 @@ static struct sc_mountinfo_entry *sc_parse_mountinfo_entry(const char *line)
+ 	entry->optional_fields = &entry->line_buf[0] + offset;
+ 	// NOTE: This ensures that optional_fields is never NULL. If this changes,
+ 	// must adjust all callers of parse_mountinfo_entry() accordingly.
+-	char *to = entry->optional_fields;
+ 	for (int field_num = 0;; ++field_num) {
+ 		char *opt_field = parse_next_string_field();
+ 		if (opt_field == NULL)
+-- 
+2.10.2
+

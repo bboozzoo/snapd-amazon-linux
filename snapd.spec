@@ -1,15 +1,20 @@
-%if 0%{?fedora} || 0%{?rhel} == 6
+# With Fedora, nothing is bundled. For everything else, bundling is used.
+# To use bundled stuff, use "--with vendorized" on rpmbuild
+%if 0%{?fedora}
+%bcond_with vendorized
+%else
+%bcond_without vendorized
+%endif
+
 %global with_devel 1
-%global with_bundled 0
 %global with_debug 1
 %global with_check 0
 %global with_unit_test 0
-%else
-%global with_devel 0
+
+%if ! %{with vendorized}
 %global with_bundled 0
-%global with_debug 0
-%global with_check 0
-%global with_unit_test 0
+%else
+%global with_bundled 1
 %endif
 
 %if 0%{?with_debug}
@@ -26,30 +31,38 @@
 %global provider_prefix %{provider}.%{provider_tld}/%{project}/%{repo}
 %global import_path     %{provider_prefix}
 
-# SELinux policy globals
-%global polmodname snapcore-selinux
-%global commit1 4566045b2d4ab6d72cc8991814753997a53f6377
-%global shortcommit1 %(c=%{commit1}; echo ${c:0:7})
-%global snapdate 20170209
-%global polmodfolder %{polmodname}-%{commit1}-%{commit1}
-
+%global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.16
-Release:        2%{?dist}
+Version:        2.23.6
+Release:        1%{?dist}
 Summary:        A transactional software package manager
+Group:          System Environment/Base
 License:        GPLv3
 URL:            https://%{provider_prefix}
+%if ! 0%{?with_bundled}
 Source0:        https://%{provider_prefix}/archive/%{version}/%{name}-%{version}.tar.gz
-Patch0:         0001-dist-Add-generic-systemd-units.patch
-Patch1:         0001-dirs-FEDORA-use-alternate-snap-mount-directory.patch
-Patch2:         0001-docs-Fix-binary-path-referenced-in-documentation.patch
-Patch3:         0001-Fix-LibExecDir-on-Fedora.patch
-Patch4:         0001-Set-a-context-on-the-mount-units.patch
-# snapcore SELinux policy
-Source1:        https://gitlab.com/Conan_Kudo/snapcore-selinux/repository/archive.tar.gz?ref=%{commit1}#/%{polmodname}-%{shortcommit1}.tar.gz
+%else
+Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.tar.xz
+%endif
 
+# Upstream proposed PR (supersedes this patch): https://github.com/snapcore/snapd/pull/3039
+Patch0001:      0001-cmd-link-libcap-dynamically.patch
+# Upstream merged: https://github.com/snapcore/snapd/pull/2989
+Patch0002:      0002-cmd-remove-unused-variable.patch
+# Upstream merged: https://github.com/snapcore/snapd/pull/2989
+Patch0003:      0003-cmd-add-directive-for-shellcheck-and-follow-source.patch
+# No known status
+Patch0004:      0004-cmd-use-libtool-for-the-internal-library.patch
+# Upstream merged: https://github.com/snapcore/snapd/pull/2989
+Patch0006:      0006-errtracker-fix-testing-outside-of-ubuntu.patch
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3096
+Patch0007:      0007-osutil-HACK-use-usr-bin-true-false.patch
+# Upstream merged: https://github.com/snapcore/snapd/pull/3001
+Patch0008:      0008-partition-skip-some-tests-if-grub-editenv-is-not-ava.patch
 
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3084
+Patch1001:      PR3084-packaging-use-templates-for-systemd-units.patch
 
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
 ExclusiveArch:  %{?go_arches:%{go_arches}}%{!?go_arches:%{ix86} x86_64 %{arm}}
@@ -58,7 +71,7 @@ BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
 # BuildRequires:  systemd-units
 BuildRequires:  systemd
 %{?systemd_requires}
-Requires:       snap-confine >= 1.0.44-2
+Requires:       snap-confine%{?_isa} = %{version}-%{release}
 Requires:       squashfs-tools
 # we need squashfs.ko loaded
 Requires:       kmod(squashfs.ko)
@@ -69,26 +82,59 @@ Requires:       %{name}-selinux = %{version}-%{release}
 %if ! 0%{?with_bundled}
 BuildRequires: golang(github.com/cheggaaa/pb)
 BuildRequires: golang(github.com/coreos/go-systemd/activation)
-BuildRequires: golang(github.com/gorilla/context)
 BuildRequires: golang(github.com/gorilla/mux)
-BuildRequires: golang(github.com/gorilla/websocket)
-BuildRequires: golang(github.com/gosexy/gettext)
 BuildRequires: golang(github.com/jessevdk/go-flags)
-BuildRequires: golang(github.com/mvo5/goconfigparser)
 BuildRequires: golang(github.com/mvo5/uboot-go/uenv)
+BuildRequires: golang(github.com/ojii/gettext.go)
+BuildRequires: golang(golang.org/x/crypto/openpgp/armor)
+BuildRequires: golang(golang.org/x/crypto/openpgp/packet)
+BuildRequires: golang(golang.org/x/crypto/sha3)
 BuildRequires: golang(golang.org/x/crypto/ssh/terminal)
+BuildRequires: golang(golang.org/x/net/context)
+BuildRequires: golang(golang.org/x/net/context/ctxhttp)
 BuildRequires: golang(gopkg.in/check.v1)
+BuildRequires: golang(gopkg.in/macaroon.v1)
+BuildRequires: golang(gopkg.in/mgo.v2/bson)
+BuildRequires: golang(gopkg.in/retry.v1)
 BuildRequires: golang(gopkg.in/tomb.v2)
 BuildRequires: golang(gopkg.in/yaml.v2)
-BuildRequires: golang(gopkg.in/macaroon.v1)
 %endif
 
 %description
 Snappy is a modern, cross-distribution, transactional package manager designed for
 working with self-contained, immutable packages.
 
+%package -n snap-confine
+Summary:        Confinement system for snap applications
+License:        GPLv3
+Group:          System Environment/Base
+BuildRequires:  autoconf
+BuildRequires:  automake
+BuildRequires:  libtool
+BuildRequires:  gcc
+BuildRequires:  indent
+BuildRequires:  pkgconfig(glib-2.0)
+BuildRequires:  pkgconfig(libcap)
+BuildRequires:  pkgconfig(libseccomp)
+BuildRequires:  pkgconfig(libudev)
+BuildRequires:  pkgconfig(systemd)
+BuildRequires:  pkgconfig(udev)
+BuildRequires:  xfsprogs-devel
+BuildRequires:  glibc-static
+BuildRequires:  valgrind
+BuildRequires:  %{_bindir}/rst2man
+BuildRequires:  %{_bindir}/shellcheck
+
+# Ensures older version from split packaging is replaced
+Obsoletes:      snap-confine < 2.19
+
+%description -n snap-confine
+The package is used internally by snapd to apply confinement to the started
+snap applications.
+
 %package selinux
 Summary:        SELinux module for snapd
+Group:          System Environment/Base
 License:        GPLv2+
 BuildArch:      noarch
 BuildRequires:  selinux-policy, selinux-policy-devel
@@ -111,7 +157,115 @@ BuildArch:     noarch
 %if 0%{?with_check} && ! 0%{?with_bundled}
 %endif
 
-Provides:      golang(%{import_path}) = %{version}-%{release}
+%if ! 0%{?with_bundled}
+Requires:      golang(github.com/cheggaaa/pb)
+Requires:      golang(github.com/coreos/go-systemd/activation)
+Requires:      golang(github.com/gorilla/mux)
+Requires:      golang(github.com/jessevdk/go-flags)
+Requires:      golang(github.com/mvo5/uboot-go/uenv)
+Requires:      golang(github.com/ojii/gettext.go)
+Requires:      golang(golang.org/x/crypto/openpgp/armor)
+Requires:      golang(golang.org/x/crypto/openpgp/packet)
+Requires:      golang(golang.org/x/crypto/sha3)
+Requires:      golang(golang.org/x/crypto/ssh/terminal)
+Requires:      golang(golang.org/x/net/context)
+Requires:      golang(golang.org/x/net/context/ctxhttp)
+Requires:      golang(gopkg.in/check.v1)
+Requires:      golang(gopkg.in/macaroon.v1)
+Requires:      golang(gopkg.in/mgo.v2/bson)
+Requires:      golang(gopkg.in/retry.v1)
+Requires:      golang(gopkg.in/tomb.v2)
+Requires:      golang(gopkg.in/yaml.v2)
+%else
+# These Provides are unversioned because the sources in
+# the bundled tarball are unversioned (they go by git commit)
+# *sigh*... I hate golang...
+Provides:      bundled(golang(github.com/cheggaaa/pb))
+Provides:      bundled(golang(github.com/coreos/go-systemd/activation))
+Provides:      bundled(golang(github.com/gorilla/mux))
+Provides:      bundled(golang(github.com/jessevdk/go-flags))
+Provides:      bundled(golang(github.com/mvo5/uboot-go/uenv))
+Provides:      bundled(golang(github.com/ojii/gettext.go))
+Provides:      bundled(golang(golang.org/x/crypto/openpgp/armor))
+Provides:      bundled(golang(golang.org/x/crypto/openpgp/packet))
+Provides:      bundled(golang(golang.org/x/crypto/sha3))
+Provides:      bundled(golang(golang.org/x/crypto/ssh/terminal))
+Provides:      bundled(golang(golang.org/x/net/context))
+Provides:      bundled(golang(golang.org/x/net/context/ctxhttp))
+Provides:      bundled(golang(gopkg.in/check.v1))
+Provides:      bundled(golang(gopkg.in/macaroon.v1))
+Provides:      bundled(golang(gopkg.in/mgo.v2/bson))
+Provides:      bundled(golang(gopkg.in/retry.v1))
+Provides:      bundled(golang(gopkg.in/tomb.v2))
+Provides:      bundled(golang(gopkg.in/yaml.v2))
+%endif
+
+# Generated by gofed
+Provides:      golang(%{import_path}/arch) = %{version}-%{release}
+Provides:      golang(%{import_path}/asserts) = %{version}-%{release}
+Provides:      golang(%{import_path}/asserts/assertstest) = %{version}-%{release}
+Provides:      golang(%{import_path}/asserts/signtool) = %{version}-%{release}
+Provides:      golang(%{import_path}/asserts/snapasserts) = %{version}-%{release}
+Provides:      golang(%{import_path}/asserts/sysdb) = %{version}-%{release}
+Provides:      golang(%{import_path}/asserts/systestkeys) = %{version}-%{release}
+Provides:      golang(%{import_path}/boot) = %{version}-%{release}
+Provides:      golang(%{import_path}/boot/boottest) = %{version}-%{release}
+Provides:      golang(%{import_path}/client) = %{version}-%{release}
+Provides:      golang(%{import_path}/cmd) = %{version}-%{release}
+Provides:      golang(%{import_path}/daemon) = %{version}-%{release}
+Provides:      golang(%{import_path}/dirs) = %{version}-%{release}
+Provides:      golang(%{import_path}/errtracker) = %{version}-%{release}
+Provides:      golang(%{import_path}/httputil) = %{version}-%{release}
+Provides:      golang(%{import_path}/i18n) = %{version}-%{release}
+Provides:      golang(%{import_path}/i18n/dumb) = %{version}-%{release}
+Provides:      golang(%{import_path}/image) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/apparmor) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/backends) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/builtin) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/dbus) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/ifacetest) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/kmod) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/mount) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/policy) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/seccomp) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/systemd) = %{version}-%{release}
+Provides:      golang(%{import_path}/interfaces/udev) = %{version}-%{release}
+Provides:      golang(%{import_path}/logger) = %{version}-%{release}
+Provides:      golang(%{import_path}/osutil) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/assertstate) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/auth) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/configstate) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/configstate/config) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/devicestate) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/hookstate) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/hookstate/ctlcmd) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/hookstate/hooktest) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/ifacestate) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/patch) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/snapstate) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/snapstate/backend) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/state) = %{version}-%{release}
+Provides:      golang(%{import_path}/partition) = %{version}-%{release}
+Provides:      golang(%{import_path}/partition/grubenv) = %{version}-%{release}
+Provides:      golang(%{import_path}/progress) = %{version}-%{release}
+Provides:      golang(%{import_path}/provisioning) = %{version}-%{release}
+Provides:      golang(%{import_path}/release) = %{version}-%{release}
+Provides:      golang(%{import_path}/snap) = %{version}-%{release}
+Provides:      golang(%{import_path}/snap/snapdir) = %{version}-%{release}
+Provides:      golang(%{import_path}/snap/snapenv) = %{version}-%{release}
+Provides:      golang(%{import_path}/snap/snaptest) = %{version}-%{release}
+Provides:      golang(%{import_path}/snap/squashfs) = %{version}-%{release}
+Provides:      golang(%{import_path}/store) = %{version}-%{release}
+Provides:      golang(%{import_path}/strutil) = %{version}-%{release}
+Provides:      golang(%{import_path}/systemd) = %{version}-%{release}
+Provides:      golang(%{import_path}/tests/lib/fakestore/refresh) = %{version}-%{release}
+Provides:      golang(%{import_path}/tests/lib/fakestore/store) = %{version}-%{release}
+Provides:      golang(%{import_path}/testutil) = %{version}-%{release}
+Provides:      golang(%{import_path}/timeout) = %{version}-%{release}
+Provides:      golang(%{import_path}/wrappers) = %{version}-%{release}
+
 
 %description devel
 %{summary}
@@ -124,9 +278,20 @@ building other packages which use import path with
 %if 0%{?with_unit_test} && 0%{?with_devel}
 %package unit-test-devel
 Summary:         Unit tests for %{name} package
+
 %if 0%{?with_check}
 #Here comes all BuildRequires: PACKAGE the unit tests
 #in %%check section need for running
+%endif
+
+%if 0%{?with_check} && ! 0%{?with_bundled}
+BuildRequires: golang(github.com/mvo5/goconfigparser)
+%endif
+
+%if ! 0%{?with_bundled}
+Requires:      golang(github.com/mvo5/goconfigparser)
+%else
+Provides:      bundled(golang(github.com/mvo5/goconfigparser))
 %endif
 
 # test subpackage tests code from devel subpackage
@@ -140,22 +305,12 @@ providing packages with %{import_path} prefix.
 %endif
 
 %prep
-%setup -q -n %{name}-%{version}
-%patch0 -p1 -b .systemd
-%patch1 -p1 -b .snapdir
-%patch2 -p1 -b .docfix
-%patch3 -p1 -b .libexecdir
-%patch4 -p1 -b .mountctx
-
-# Extract source for SELinux policy module
-tar xvf %{SOURCE1}
+%autosetup -p1
 
 
 %build
-# Build SELinux module
-pushd ./%{polmodfolder}
-make SHARE="%{_datadir}" TARGETS="snappy"
-popd
+# Generate version files
+./mkversion.sh "%{version}-%{release}"
 
 # Build snapd
 mkdir -p src/github.com/snapcore
@@ -169,8 +324,34 @@ export GOPATH=$(pwd):$(pwd)/Godeps/_workspace:%{gopath}
 
 %gobuild -o bin/snap %{import_path}/cmd/snap
 %gobuild -o bin/snap-exec %{import_path}/cmd/snap-exec
+%gobuild -o bin/snapctl %{import_path}/cmd/snapctl
 %gobuild -o bin/snapd %{import_path}/cmd/snapd
 
+# Build SELinux module
+pushd ./data/selinux
+make SHARE="%{_datadir}" TARGETS="snappy"
+popd
+
+# Build snap-confine
+pushd ./cmd
+autoreconf --force --install --verbose
+# selinux support is not yet available, for now just disable apparmor
+# FIXME: add --enable-caps-over-setuid as soon as possible (setuid discouraged!)
+%configure \
+    --disable-apparmor \
+    --libexecdir=%{_libexecdir}/snapd/ \
+    --with-snap-mount-dir=%{_sharedstatedir}/snapd/snap \
+    --with-merged-usr
+
+%make_build
+popd
+
+# Build systemd units
+pushd ./data/systemd
+make BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}" \
+     SNAP_MOUNTDIR="%{_sharedstatedir}/snapd/snap" \
+     SNAPD_ENVIRONMENT_FILE="%{_sysconfdir}/sysconfig/snapd"
+popd
 
 %install
 install -d -p %{buildroot}%{_bindir}
@@ -189,23 +370,36 @@ install -d -p %{buildroot}%{_localstatedir}/snap
 install -d -p %{buildroot}%{_datadir}/selinux/devel/include/contrib
 install -d -p %{buildroot}%{_datadir}/selinux/packages
 
-# Install SELinux module
-install -p -m 0644 %{polmodfolder}/snappy.if %{buildroot}%{_datadir}/selinux/devel/include/contrib
-install -p -m 0644 %{polmodfolder}/snappy.pp.bz2 %{buildroot}%{_datadir}/selinux/packages
-
 # Install snap and snapd
 install -p -m 0755 bin/snap %{buildroot}%{_bindir}
 install -p -m 0755 bin/snap-exec %{buildroot}%{_libexecdir}/snapd
+install -p -m 0755 bin/snapctl %{buildroot}%{_bindir}/snapctl
 install -p -m 0755 bin/snapd %{buildroot}%{_libexecdir}/snapd
+
+# Install SELinux module
+install -p -m 0644 data/selinux/snappy.if %{buildroot}%{_datadir}/selinux/devel/include/contrib
+install -p -m 0644 data/selinux/snappy.pp.bz2 %{buildroot}%{_datadir}/selinux/packages
 
 # Install snap(1) man page
 bin/snap help --man > %{buildroot}%{_mandir}/man1/snap.1
 
+# Install snap-confine
+pushd ./cmd
+%make_install
+# Undo the 0000 permissions, they are restored in the %%files section below
+chmod 0755 %{buildroot}%{_sharedstatedir}/snapd/void
+# We don't use AppArmor
+rm -rfv %{buildroot}%{_sysconfdir}/apparmor.d
+# ubuntu-core-launcher is dead
+rm -fv %{buildroot}%{_bindir}/ubuntu-core-launcher
+popd
+
 # Install all systemd units
-install -p -m 0644 dist/snapd.socket %{buildroot}%{_unitdir}
-install -p -m 0644 dist/snapd.service %{buildroot}%{_unitdir}
-install -p -m 0644 dist/snapd.refresh.service %{buildroot}%{_unitdir}
-install -p -m 0644 dist/snapd.refresh.timer %{buildroot}%{_unitdir}
+pushd ./data/systemd
+%make_install SYSTEMDSYSTEMUNITDIR="%{_unitdir}"
+# Remove snappy core specific units
+rm -fv %{buildroot}%{_unitdir}/snapd.system-shutdown.service
+popd
 
 # Put /var/lib/snapd/snap/bin on PATH
 # Put /var/lib/snapd/desktop on XDG_DATA_DIRS
@@ -252,6 +446,7 @@ sort -u -o devel.file-list devel.file-list
 %endif
 
 %check
+# snapd tests
 %if 0%{?with_check} && 0%{?with_unit_test} && 0%{?with_devel}
 %if ! 0%{?with_bundled}
 export GOPATH=%{buildroot}/%{gopath}:%{gopath}
@@ -261,24 +456,24 @@ export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %gotest %{import_path}
 %endif
 
-#define license tag if not already defined
-%{!?_licensedir:%global license %doc}
-
-%files selinux
-%license %{polmodfolder}/COPYING
-%doc %{polmodfolder}/README.md
-%{_datadir}/selinux/packages/snappy.pp.bz2
-%{_datadir}/selinux/devel/include/contrib/snappy.if
+# snap-confine tests (these always run!)
+pushd ./cmd
+make check
+popd
 
 %files
+#define license tag if not already defined
+%{!?_licensedir:%global license %doc}
 %license COPYING 
 %doc README.md docs/*
 %{_bindir}/snap
-%{_libexecdir}/snapd
+%{_bindir}/snapctl
+%{_libexecdir}/snapd/
 %{_mandir}/man1/snap.1*
 %{_sysconfdir}/profile.d/snapd.sh
 %{_unitdir}/snapd.socket
 %{_unitdir}/snapd.service
+%{_unitdir}/snapd.autoimport.service
 %{_unitdir}/snapd.refresh.service
 %{_unitdir}/snapd.refresh.timer
 %config(noreplace) %{_sysconfdir}/sysconfig/snapd
@@ -290,6 +485,27 @@ export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %dir %{_sharedstatedir}/snapd/snaps
 %dir %{_sharedstatedir}/snapd/snap
 %dir %{_localstatedir}/snap
+
+%files -n snap-confine
+%doc cmd/snap-confine/PORTING
+%license COPYING
+# For now, we can't use caps
+# FIXME: Switch to "%%attr(0755,root,root) %%caps(cap_sys_admin=pe)" asap!
+%attr(4755,root,root) %{_libexecdir}/snapd/snap-confine
+%{_libexecdir}/snapd/snap-discard-ns
+%{_mandir}/man5/snap-confine.5*
+%{_mandir}/man5/snap-discard-ns.5*
+%{_mandir}/man5/snap-update-ns.5*
+%{_prefix}/lib/udev/snappy-app-dev
+%{_udevrulesdir}/80-snappy-assign.rules
+%attr(0000,root,root) %{_sharedstatedir}/snapd/void
+
+
+%files selinux
+%license data/selinux/COPYING
+%doc data/selinux/README.md
+%{_datadir}/selinux/packages/snappy.pp.bz2
+%{_datadir}/selinux/devel/include/contrib/snappy.if
 
 %if 0%{?with_devel}
 %files devel -f devel.file-list
@@ -305,13 +521,13 @@ export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %endif
 
 %post
-%systemd_post snapd.service snapd.socket snapd.refresh.timer snapd.refresh.service
+%systemd_post %{snappy_svcs}
 
 %preun
-%systemd_preun snapd.service snapd.socket snapd.refresh.timer snapd.refresh.service
+%systemd_preun %{snappy_svcs}
 
 %postun
-%systemd_postun_with_restart snapd.service snapd.socket snapd.refresh.timer snapd.refresh.service
+%systemd_postun_with_restart %{snappy_svcs}
 
 %pre selinux
 %selinux_relabel_pre
@@ -328,49 +544,81 @@ fi
 
 
 %changelog
+* Thu Mar 30 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-1
+- Rebase to snapd 2.23.6
+- Rediff patches
+- Re-enable seccomp
+
+* Wed Mar 29 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.5-1
+- Rebase to snapd 2.23.5
+- Disable seccomp temporarily avoid snap-confine bugs (LP#1674193)
+- Use vendorized build for non-Fedora
+
+* Mon Mar 13 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.1-1
+- Rebase to snapd 2.23.1
+- Add support for vendored tarball for non-Fedora targets
+- Use merged in SELinux policy module
+
 * Sat Feb 11 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.16-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_26_Mass_Rebuild
 
 * Wed Oct 19 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.16-1
 - New upstream release
+
 * Tue Oct 18 2016 Neal Gompa <ngompa13@gmail.com> - 2.14-2
 - Add SELinux policy module subpackage
+
 * Tue Aug 30 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.14-1
 - New upstream release
+
 * Tue Aug 23 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.13-1
 - New upstream release
+
 * Thu Aug 18 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.12-2
 - Correct license identifier
+
 * Thu Aug 18 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.12-1
 - New upstream release
+
 * Thu Aug 18 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-8
 - Add %%dir entries for various snapd directories
 - Tweak Source0 URL
+
 * Tue Aug 16 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-7
 - Disable snapd re-exec feature by default
+
 * Tue Aug 16 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-6
 - Don't auto-start snapd.socket and snapd.refresh.timer
+
 * Tue Aug 16 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-5
 - Don't touch snapd state on removal
+
 * Tue Aug 16 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-4
 - Use ExecStartPre to load squashfs.ko before snapd starts
 - Use dedicated systemd units for Fedora
+
 * Tue Aug 16 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-3
 - Remove systemd preset (will be requested separately according to distribution
   standards).
+
 * Tue Aug 16 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-2
 - Use Requires: kmod(squashfs.ko) instead of Requires: kernel-modules
+
 * Tue Aug 16 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.11-1
 - New upstream release
 - Move private executables to /usr/libexec/snapd/
-* Fri Jun 24 2016 Zygmunt Krynicki - 2.0.9-2
+
+* Fri Jun 24 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.0.9-2
 - Depend on kernel-modules to ensure that squashfs can be loaded. Load it afer
   installing the package. This hopefully fixes
   https://github.com/zyga/snapcore-fedora/issues/2
-* Fri Jun 17 2016 Zygmunt Krynicki - 2.0.9
+
+* Fri Jun 17 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.0.9
 - New upstream release
   https://github.com/snapcore/snapd/releases/tag/2.0.9
-* Tue Jun 14 2016 Zygmunt Krynicki - 2.0.8.1
+
+* Tue Jun 14 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.0.8.1
 - New upstream release
-* Fri Jun 10 2016 Zygmunt Krynicki - 2.0.8
+
+* Fri Jun 10 2016 Zygmunt Krynicki <me@zygoon.pl> - 2.0.8
 - First package for Fedora
