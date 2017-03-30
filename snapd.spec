@@ -60,6 +60,8 @@ Patch0006:      0006-errtracker-fix-testing-outside-of-ubuntu.patch
 Patch0007:      0007-osutil-HACK-use-usr-bin-true-false.patch
 # Upstream merged: https://github.com/snapcore/snapd/pull/3001
 Patch0008:      0008-partition-skip-some-tests-if-grub-editenv-is-not-ava.patch
+# Upstream merged: https://github.com/snapcore/snapd/pull/3081
+Patch0009:      0001-data-selinux-Add-context-definition-for-snapctl.patch
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3084
 Patch1001:      PR3084-packaging-use-templates-for-systemd-units.patch

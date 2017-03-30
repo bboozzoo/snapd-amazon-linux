@@ -1,0 +1,22 @@
+From bc10b2df54e44a955ef338f7d1cd3dcd82db9271 Mon Sep 17 00:00:00 2001
+From: Neal Gompa <ngompa13@gmail.com>
+Date: Fri, 24 Mar 2017 09:52:39 -0400
+Subject: [PATCH] data/selinux: Add context definition for snapctl
+
+Signed-off-by: Neal Gompa <ngompa13@gmail.com>
+---
+ data/selinux/snappy.fc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/data/selinux/snappy.fc b/data/selinux/snappy.fc
+index a807f84..b928aed 100644
+--- a/data/selinux/snappy.fc
++++ b/data/selinux/snappy.fc
+@@ -21,6 +21,7 @@ HOME_DIR/snap(/.*)?			gen_context(system_u:object_r:snappy_home_t,s0)
+ 
+ 
+ /usr/bin/snap			--	gen_context(system_u:object_r:snappy_exec_t,s0)
++/usr/bin/snapctl		--	gen_context(system_u:object_r:snappy_exec_t,s0)
+ 
+ ifdef(`distro_redhat',`
+ /usr/libexec/snapd/.*		--	gen_context(system_u:object_r:snappy_exec_t,s0)
