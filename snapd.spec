@@ -38,7 +38,7 @@
 
 Name:           snapd
 Version:        2.23.6
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -117,8 +117,8 @@ BuildRequires: golang(gopkg.in/yaml.v2)
 %endif
 
 %description
-Snappy is a modern, cross-distribution, transactional package manager designed for
-working with self-contained, immutable packages.
+Snappy is a modern, cross-distribution, transactional package manager
+designed for working with self-contained, immutable packages.
 
 %package -n snap-confine
 Summary:        Confinement system for snap applications
@@ -148,8 +148,8 @@ BuildRequires:  %{_bindir}/shellcheck
 Obsoletes:      snap-confine < 2.19
 
 %description -n snap-confine
-The package is used internally by snapd to apply confinement to the started
-snap applications.
+This package is used internally by snapd to apply confinement to
+the started snap applications.
 
 %package selinux
 Summary:        SELinux module for snapd
@@ -164,8 +164,8 @@ Requires(pre):  libselinux-utils
 Requires(post): libselinux-utils
 
 %description selinux
-This package provides the SELinux policy module to ensure snapd runs properly
-under an environment with SELinux enabled.
+This package provides the SELinux policy module to ensure snapd
+runs properly under an environment with SELinux enabled.
 
 
 %if 0%{?with_devel}
@@ -405,7 +405,7 @@ bin/snap help --man > %{buildroot}%{_mandir}/man1/snap.1
 # Install snap-confine
 pushd ./cmd
 %make_install
-# Undo the 0000 permissions, they are restored in the %%files section below
+# Undo the 0000 permissions, they are restored in the files section
 chmod 0755 %{buildroot}%{_sharedstatedir}/snapd/void
 # We don't use AppArmor
 rm -rfv %{buildroot}%{_sysconfdir}/apparmor.d
@@ -487,7 +487,10 @@ popd
 %doc README.md docs/*
 %{_bindir}/snap
 %{_bindir}/snapctl
-%{_libexecdir}/snapd/
+%dir %{_libexecdir}/snapd
+%{_libexecdir}/snapd/snapd
+%{_libexecdir}/snapd/snap-exec
+%exclude %{_libexecdir}/snapd/system-shutdown
 %{_mandir}/man1/snap.1*
 %{_sysconfdir}/profile.d/snapd.sh
 %{_unitdir}/snapd.socket
@@ -508,10 +511,13 @@ popd
 %files -n snap-confine
 %doc cmd/snap-confine/PORTING
 %license COPYING
+%dir %{_libexecdir}/snapd
 # For now, we can't use caps
 # FIXME: Switch to "%%attr(0755,root,root) %%caps(cap_sys_admin=pe)" asap!
 %attr(4755,root,root) %{_libexecdir}/snapd/snap-confine
 %{_libexecdir}/snapd/snap-discard-ns
+%{_libexecdir}/snapd/snap-update-ns
+%{_libexecdir}/snapd/system-shutdown
 %{_mandir}/man5/snap-confine.5*
 %{_mandir}/man5/snap-discard-ns.5*
 %{_mandir}/man5/snap-update-ns.5*
@@ -563,6 +569,10 @@ fi
 
 
 %changelog
+* Fri Mar 31 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-2
+- Fix the overlapping file conflicts between snapd and snap-confine
+- Rework package descriptions slightly
+
 * Thu Mar 30 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-1
 - Rebase to snapd 2.23.6
 - Rediff patches
