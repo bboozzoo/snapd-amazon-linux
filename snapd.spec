@@ -139,7 +139,10 @@ BuildRequires:  xfsprogs-devel
 BuildRequires:  glibc-static
 BuildRequires:  valgrind
 BuildRequires:  %{_bindir}/rst2man
+%if 0%{?fedora} >= 25
+# ShellCheck in F24 and older doesn't work
 BuildRequires:  %{_bindir}/shellcheck
+%endif
 
 # Ensures older version from split packaging is replaced
 Obsoletes:      snap-confine < 2.19
