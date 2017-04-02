@@ -38,7 +38,7 @@
 
 Name:           snapd
 Version:        2.23.6
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -423,11 +423,11 @@ popd
 # Put /var/lib/snapd/snap/bin on PATH
 # Put /var/lib/snapd/desktop on XDG_DATA_DIRS
 cat << __SNAPD_SH__ > %{buildroot}%{_sysconfdir}/profile.d/snapd.sh
-PATH=$PATH:/var/lib/snapd/snap/bin
-if [ -z "$XDG_DATA_DIRS" ]; then
-    XDG_DATA_DIRS=/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
+PATH=\$PATH:/var/lib/snapd/snap/bin
+if [ -z "\$XDG_DATA_DIRS" ]; then
+    XDG_DATA_DIRS=/usr/share/:/usr/local/share/:/var/lib/snapd/desktop
 else
-    XDG_DATA_DIRS="$XDG_DATA_DIRS":/var/lib/snapd/desktop
+    XDG_DATA_DIRS="\$XDG_DATA_DIRS":/var/lib/snapd/desktop
 fi
 export XDG_DATA_DIRS
 __SNAPD_SH__
@@ -569,6 +569,9 @@ fi
 
 
 %changelog
+* Sat Apr 01 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-3
+- Fix profile.d generation so that vars aren't expanded in package build
+
 * Fri Mar 31 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-2
 - Fix the overlapping file conflicts between snapd and snap-confine
 - Rework package descriptions slightly
