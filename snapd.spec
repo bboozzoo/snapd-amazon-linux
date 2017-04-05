@@ -38,7 +38,7 @@
 
 Name:           snapd
 Version:        2.23.6
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -55,7 +55,7 @@ Patch0001:      0001-cmd-link-libcap-dynamically.patch
 Patch0002:      0002-cmd-remove-unused-variable.patch
 # Upstream merged: https://github.com/snapcore/snapd/pull/2989
 Patch0003:      0003-cmd-add-directive-for-shellcheck-and-follow-source.patch
-# Upstream pproposed PR: https://github.com/snapcore/snapd/pull/3108
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3108
 Patch0004:      0004-cmd-use-libtool-for-the-internal-library.patch
 # Upstream merged: https://github.com/snapcore/snapd/pull/2989
 Patch0006:      0006-errtracker-fix-testing-outside-of-ubuntu.patch
@@ -83,7 +83,6 @@ ExclusiveArch:  %{ix86} x86_64 %{arm} aarch64 ppc64le s390x
 
 # If go_compiler is not set to 1, there is no virtual provide. Use golang instead.
 BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang}
-# BuildRequires:  systemd-units
 BuildRequires:  systemd
 %{?systemd_requires}
 
@@ -547,6 +546,18 @@ popd
 
 %post
 %systemd_post %{snappy_svcs}
+# If install, test if snapd socket and timer are enabled.
+# If enabled, then attempt to start them. This will silently fail
+# in chroots or other environments where services aren't expected
+# to be started.
+if [ $1 -eq 1 ] ; then
+   if systemctl -q is-enabled snapd.socket > /dev/null 2>&1 ; then
+      systemctl start snapd.socket > /dev/null 2>&1 || :
+   fi
+   if systemctl -q is-enabled snapd.refresh.timer > /dev/null 2>&1 ; then
+      systemctl start snapd.refresh.timer > /dev/null 2>&1 || :
+   fi
+fi
 
 %preun
 %systemd_preun %{snappy_svcs}
@@ -569,6 +580,9 @@ fi
 
 
 %changelog
+* Wed Apr 05 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-4
+- Test if snapd socket and timer enabled and start them if enabled on install
+
 * Sat Apr 01 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-3
 - Fix profile.d generation so that vars aren't expanded in package build
 
