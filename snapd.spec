@@ -37,8 +37,8 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.23.6
-Release:        4%{?dist}
+Version:        2.24
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -46,32 +46,11 @@ URL:            https://%{provider_prefix}
 %if ! 0%{?with_bundled}
 Source0:        https://%{provider_prefix}/archive/%{version}/%{name}-%{version}.tar.gz
 %else
-Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.tar.xz
+Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.vendor.orig.tar.xz
 %endif
 
-# Upstream proposed PR (supersedes this patch): https://github.com/snapcore/snapd/pull/3039
-Patch0001:      0001-cmd-link-libcap-dynamically.patch
-# Upstream merged: https://github.com/snapcore/snapd/pull/2989
-Patch0002:      0002-cmd-remove-unused-variable.patch
-# Upstream merged: https://github.com/snapcore/snapd/pull/2989
-Patch0003:      0003-cmd-add-directive-for-shellcheck-and-follow-source.patch
-# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3108
-Patch0004:      0004-cmd-use-libtool-for-the-internal-library.patch
-# Upstream merged: https://github.com/snapcore/snapd/pull/2989
-Patch0006:      0006-errtracker-fix-testing-outside-of-ubuntu.patch
-# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3096
-Patch0007:      0007-osutil-HACK-use-usr-bin-true-false.patch
-# Upstream merged: https://github.com/snapcore/snapd/pull/3001
-Patch0008:      0008-partition-skip-some-tests-if-grub-editenv-is-not-ava.patch
-# Upstream merged: https://github.com/snapcore/snapd/pull/3081
-Patch0009:      0001-data-selinux-Add-context-definition-for-snapctl.patch
-# Upstream merged: https://github.com/snapcore/snapd/pull/3094
-Patch0010:      0001-cmd-rework-header-check-for-xfs-xqm.patch
-# No upstream status yet
-Patch0011:      0001-cmd-snap-confine-hardcode-constants-from-xfs-xqm.h-f.patch
-
-# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3084
-Patch1001:      PR3084-packaging-use-templates-for-systemd-units.patch
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
+Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -90,6 +69,8 @@ Requires:       snap-confine%{?_isa} = %{version}-%{release}
 Requires:       squashfs-tools
 # we need squashfs.ko loaded
 Requires:       kmod(squashfs.ko)
+# bash-completion owns /usr/share/bash-completion/completions
+Requires:       bash-completion
 
 # Force the SELinux module to be installed
 Requires:       %{name}-selinux = %{version}-%{release}
@@ -344,6 +325,7 @@ export GOPATH=$(pwd):$(pwd)/Godeps/_workspace:%{gopath}
 %gobuild -o bin/snap-exec %{import_path}/cmd/snap-exec
 %gobuild -o bin/snapctl %{import_path}/cmd/snapctl
 %gobuild -o bin/snapd %{import_path}/cmd/snapd
+%gobuild -o bin/snap-update-ns %{import_path}/cmd/snap-update-ns
 
 # Build SELinux module
 pushd ./data/selinux
@@ -367,7 +349,7 @@ popd
 # Build systemd units
 pushd ./data/systemd
 make BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}" \
-     SNAP_MOUNTDIR="%{_sharedstatedir}/snapd/snap" \
+     SNAP_MOUNT_DIR="%{_sharedstatedir}/snapd/snap" \
      SNAPD_ENVIRONMENT_FILE="%{_sysconfdir}/sysconfig/snapd"
 popd
 
@@ -393,6 +375,7 @@ install -p -m 0755 bin/snap %{buildroot}%{_bindir}
 install -p -m 0755 bin/snap-exec %{buildroot}%{_libexecdir}/snapd
 install -p -m 0755 bin/snapctl %{buildroot}%{_bindir}/snapctl
 install -p -m 0755 bin/snapd %{buildroot}%{_libexecdir}/snapd
+install -p -m 0755 bin/snap-update-ns %{buildroot}%{_libexecdir}/snapd
 
 # Install SELinux module
 install -p -m 0644 data/selinux/snappy.if %{buildroot}%{_datadir}/selinux/devel/include/contrib
@@ -400,6 +383,12 @@ install -p -m 0644 data/selinux/snappy.pp.bz2 %{buildroot}%{_datadir}/selinux/pa
 
 # Install snap(1) man page
 bin/snap help --man > %{buildroot}%{_mandir}/man1/snap.1
+
+# Install the "info" data file with snapd version
+install -m 644 -D data/info %{buildroot}%{_libexecdir}/snapd/info
+
+# Install bash completion for "snap"
+install -m 644 -D data/completion/snap %{buildroot}%{_datadir}/bash-completion/completions/snap
 
 # Install snap-confine
 pushd ./cmd
@@ -489,8 +478,9 @@ popd
 %dir %{_libexecdir}/snapd
 %{_libexecdir}/snapd/snapd
 %{_libexecdir}/snapd/snap-exec
-%exclude %{_libexecdir}/snapd/system-shutdown
+%{_libexecdir}/snapd/info
 %{_mandir}/man1/snap.1*
+%{_datadir}/bash-completion/completions/snap
 %{_sysconfdir}/profile.d/snapd.sh
 %{_unitdir}/snapd.socket
 %{_unitdir}/snapd.service
@@ -519,7 +509,6 @@ popd
 %{_libexecdir}/snapd/system-shutdown
 %{_mandir}/man5/snap-confine.5*
 %{_mandir}/man5/snap-discard-ns.5*
-%{_mandir}/man5/snap-update-ns.5*
 %{_prefix}/lib/udev/snappy-app-dev
 %{_udevrulesdir}/80-snappy-assign.rules
 %attr(0000,root,root) %{_sharedstatedir}/snapd/void
@@ -580,6 +569,11 @@ fi
 
 
 %changelog
+* Tue Apr 11 2017 Neal Gompa <ngompa13@gmail.com> - 2.24-1
+- Update to snapd 2.24
+- Drop merged patches
+- Install snap bash completion and snapd info file
+
 * Wed Apr 05 2017 Neal Gompa <ngompa13@gmail.com> - 2.23.6-4
 - Test if snapd socket and timer enabled and start them if enabled on install
 
