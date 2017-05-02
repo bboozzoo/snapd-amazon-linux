@@ -1,0 +1,92 @@
+From e0d962ea04b82a89cc5bac904f2790d6f436baef Mon Sep 17 00:00:00 2001
+From: Zygmunt Krynicki <zygmunt.krynicki@canonical.com>
+Date: Tue, 2 May 2017 12:18:20 +0200
+Subject: [PATCH] cmd/snap-confine/tests: fix shellcheck on recently added
+ files
+
+Shellcheck is not tested automatically becauseof packaging issues related to
+that. This has lead to an issue where we merged something that fails (harmless)
+shellcheck verification and is a problem for downstream packaging.
+
+Signed-off-by: Zygmunt Krynicki <zygmunt.krynicki@canonical.com>
+---
+ cmd/snap-confine/tests/common.sh                            | 2 +-
+ cmd/snap-confine/tests/test_bad_seccomp_filter_args_mknod   | 1 +
+ cmd/snap-confine/tests/test_restrictions_working_args       | 8 ++++----
+ cmd/snap-confine/tests/test_restrictions_working_args_mknod | 1 +
+ 4 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/cmd/snap-confine/tests/common.sh b/cmd/snap-confine/tests/common.sh
+index 94c74ca..781a472 100644
+--- a/cmd/snap-confine/tests/common.sh
++++ b/cmd/snap-confine/tests/common.sh
+@@ -60,7 +60,7 @@ SHM="$(mktemp -d -p /run/shm)"
+ trap 'rm -rf $TMP $SHM' EXIT
+ 
+ # name snap-confine as the test name for improved logging
+-L="$TMP/`basename $0`"
++L="$TMP/$(basename "$0")"
+ cp "$(pwd)/snap-confine/snap-confine" "$L"
+ export L
+ 
+diff --git a/cmd/snap-confine/tests/test_bad_seccomp_filter_args_mknod b/cmd/snap-confine/tests/test_bad_seccomp_filter_args_mknod
+index 12ca221..74d7ebe 100755
+--- a/cmd/snap-confine/tests/test_bad_seccomp_filter_args_mknod
++++ b/cmd/snap-confine/tests/test_bad_seccomp_filter_args_mknod
+@@ -2,6 +2,7 @@
+ 
+ set -e
+ 
++# shellcheck source=snap-confine/tests/common.sh
+ . "${srcdir:-.}/snap-confine/tests/common.sh"
+ 
+ get_common_syscalls >"$TMP"/tmpl
+diff --git a/cmd/snap-confine/tests/test_restrictions_working_args b/cmd/snap-confine/tests/test_restrictions_working_args
+index c2d0a16..64f3af1 100755
+--- a/cmd/snap-confine/tests/test_restrictions_working_args
++++ b/cmd/snap-confine/tests/test_restrictions_working_args
+@@ -78,7 +78,7 @@ cat "$TMP"/tmpl >"$TMP"/snap.name.app
+ echo "mknod - |S_IFIFO" >>"$TMP"/snap.name.app
+ 
+ # use "$SHM"/pipe here since snap-confine uses a mount namespace for /tmp
+-printf "Test good seccomp arg filtering (mkfifo "$SHM"/pipe)"
++printf "Test good seccomp arg filtering (mkfifo %s/pipe)" "$SHM"
+ if $L snap.name.app /usr/bin/mkfifo "$SHM"/pipe ; then
+     if [ -p "$SHM"/pipe ]; then
+         PASS
+@@ -89,12 +89,12 @@ else
+     FAIL
+ fi
+ 
+-printf "Test good seccomp arg filtering (mkfifo -m 0400 "$SHM"/rpipe)"
++printf "Test good seccomp arg filtering (mkfifo -m 0400 %s/rpipe)" "$SHM"
+ if $L snap.name.app /usr/bin/mkfifo -m 0400 "$SHM"/rpipe ; then
+     if [ -p "$SHM"/rpipe ]; then
+         # Use stat instead of 'test -w' since the unit tests run as root in
+         # spread and 'test -w' returns true regardless of permissions
+-        perms=`stat -c "%a" "$SHM"/rpipe`
++		perms=$(stat -c "%a" "$SHM"/rpipe)
+         if [ "$perms" = "400" ]; then
+             PASS
+         else
+@@ -114,7 +114,7 @@ fi
+ cat "$TMP"/tmpl >"$TMP"/snap.name.app
+ echo "mknod - |S_IFREG" >>"$TMP"/snap.name.app
+ 
+-printf "Test good seccomp arg filtering (mkfifo "$SHM"/pipe blocked)"
++printf "Test good seccomp arg filtering (mkfifo %s/pipe blocked)" "$SHM"
+ if $L snap.name.app /usr/bin/mkfifo "$SHM"/pipe 2>/dev/null ; then
+     FAIL
+ else
+diff --git a/cmd/snap-confine/tests/test_restrictions_working_args_mknod b/cmd/snap-confine/tests/test_restrictions_working_args_mknod
+index f0d6630..b8fbd0f 100755
+--- a/cmd/snap-confine/tests/test_restrictions_working_args_mknod
++++ b/cmd/snap-confine/tests/test_restrictions_working_args_mknod
+@@ -2,6 +2,7 @@
+ 
+ set -e
+ 
++# shellcheck source=snap-confine/tests/common.sh
+ . "${srcdir:-.}/snap-confine/tests/common.sh"
+ 
+ get_common_syscalls >"$TMP"/tmpl

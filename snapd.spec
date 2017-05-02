@@ -37,7 +37,7 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.24
+Version:        2.25
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
@@ -48,9 +48,15 @@ Source0:        https://%{provider_prefix}/archive/%{version}/%{name}-%{version}
 %else
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.vendor.orig.tar.xz
 %endif
+# Script to implement certain package management actions
+Source1:        snap-mgmt.sh
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3222
+Patch0002:      PR3222-many-fix-test-cases-to-work-with-different-DistroLib.patch
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3258
+Patch0003:      PR3258-cmd-snap-confine-tests-fix-shellcheck.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -108,6 +114,8 @@ BuildRequires:  autoconf
 BuildRequires:  automake
 BuildRequires:  libtool
 BuildRequires:  gcc
+BuildRequires:  gettext
+BuildRequires:  gnupg
 BuildRequires:  indent
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(libcap)
@@ -423,12 +431,15 @@ __SNAPD_SH__
 # Disable re-exec by default
 echo 'SNAP_REEXEC=0' > %{buildroot}%{_sysconfdir}/sysconfig/snapd
 
+# Install snap management script
+install -pm 0755 %{SOURCE1} %{buildroot}%{_libexecdir}/snapd/snap-mgmt
+
 # source codes for building projects
 %if 0%{?with_devel}
 install -d -p %{buildroot}/%{gopath}/src/%{import_path}/
 echo "%%dir %%{gopath}/src/%%{import_path}/." >> devel.file-list
 # find all *.go but no *_test.go files and generate devel.file-list
-for file in $(find . -iname "*.go" \! -iname "*_test.go") ; do
+for file in $(find . -iname "*.go" -o -iname "*.s" \! -iname "*_test.go") ; do
     echo "%%dir %%{gopath}/src/%%{import_path}/$(dirname $file)" >> devel.file-list
     install -d -p %{buildroot}/%{gopath}/src/%{import_path}/$(dirname $file)
     cp -pav $file %{buildroot}/%{gopath}/src/%{import_path}/$file
@@ -446,6 +457,11 @@ for file in $(find . -iname "*_test.go"); do
     cp -pav $file %{buildroot}/%{gopath}/src/%{import_path}/$file
     echo "%%{gopath}/src/%%{import_path}/$file" >> unit-test-devel.file-list
 done
+
+# Install additional testdata
+install -d %{buildroot}/%{gopath}/src/%{import_path}/cmd/snap/test-data/
+cp -pav cmd/snap/test-data/* %{buildroot}/%{gopath}/src/%{import_path}/cmd/snap/test-data/
+echo "%%{gopath}/src/%%{import_path}/cmd/snap/test-data" >> unit-test-devel.file-list
 %endif
 
 %if 0%{?with_devel}
@@ -460,7 +476,7 @@ export GOPATH=%{buildroot}/%{gopath}:%{gopath}
 %else
 export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %endif
-%gotest %{import_path}
+%gotest %{import_path}/...
 %endif
 
 # snap-confine tests (these always run!)
@@ -471,7 +487,7 @@ popd
 %files
 #define license tag if not already defined
 %{!?_licensedir:%global license %doc}
-%license COPYING 
+%license COPYING
 %doc README.md docs/*
 %{_bindir}/snap
 %{_bindir}/snapctl
@@ -479,6 +495,7 @@ popd
 %{_libexecdir}/snapd/snapd
 %{_libexecdir}/snapd/snap-exec
 %{_libexecdir}/snapd/info
+%{_libexecdir}/snapd/snap-mgmt
 %{_mandir}/man1/snap.1*
 %{_datadir}/bash-completion/completions/snap
 %{_sysconfdir}/profile.d/snapd.sh
@@ -551,6 +568,12 @@ fi
 %preun
 %systemd_preun %{snappy_svcs}
 
+# Remove all Snappy content if snapd is being fully uninstalled
+if [ $1 -eq 0 ]; then
+   %{_libexecdir}/snapd/snap-mgmt purge || :
+fi
+
+
 %postun
 %systemd_postun_with_restart %{snappy_svcs}
 
@@ -569,6 +592,10 @@ fi
 
 
 %changelog
+* Mon May 01 2017 Neal Gompa <ngompa13@gmail.com> - 2.25-1
+- Update to snapd 2.25
+- Ensure all Snappy content is gone on final uninstall (#1444422)
+
 * Tue Apr 11 2017 Neal Gompa <ngompa13@gmail.com> - 2.24-1
 - Update to snapd 2.24
 - Drop merged patches
