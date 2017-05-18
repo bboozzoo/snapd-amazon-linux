@@ -37,7 +37,7 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.25
+Version:        2.26.3
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
@@ -53,10 +53,9 @@ Source1:        snap-mgmt.sh
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
-# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3222
-Patch0002:      PR3222-many-fix-test-cases-to-work-with-different-DistroLib.patch
-# Upstream proposed PR: https://github.com/snapcore/snapd/pull/3258
-Patch0003:      PR3258-cmd-snap-confine-tests-fix-shellcheck.patch
+
+# Temporary patch until properly fixed in 2.27
+Patch0100:      snapd-2.26.1-interfaces-seccomp-allow-bind-for-Fedora.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -369,11 +368,12 @@ install -d -p %{buildroot}%{_unitdir}
 install -d -p %{buildroot}%{_sysconfdir}/profile.d
 install -d -p %{buildroot}%{_sysconfdir}/sysconfig
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/assertions
-install -d -p %{buildroot}%{_sharedstatedir}/snapd/desktop
+install -d -p %{buildroot}%{_sharedstatedir}/snapd/desktop/applications
+install -d -p %{buildroot}%{_sharedstatedir}/snapd/hostfs
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/mount
-install -d -p %{buildroot}%{_sharedstatedir}/snapd/seccomp
+install -d -p %{buildroot}%{_sharedstatedir}/snapd/seccomp/profiles
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/snaps
-install -d -p %{buildroot}%{_sharedstatedir}/snapd/snap
+install -d -p %{buildroot}%{_sharedstatedir}/snapd/snap/bin
 install -d -p %{buildroot}%{_localstatedir}/snap
 install -d -p %{buildroot}%{_datadir}/selinux/devel/include/contrib
 install -d -p %{buildroot}%{_datadir}/selinux/packages
@@ -433,6 +433,9 @@ echo 'SNAP_REEXEC=0' > %{buildroot}%{_sysconfdir}/sysconfig/snapd
 
 # Install snap management script
 install -pm 0755 %{SOURCE1} %{buildroot}%{_libexecdir}/snapd/snap-mgmt
+
+# Create state.json file to be ghosted
+touch %{buildroot}%{_sharedstatedir}/snapd/state.json
 
 # source codes for building projects
 %if 0%{?with_devel}
@@ -508,11 +511,16 @@ popd
 %dir %{_sharedstatedir}/snapd
 %dir %{_sharedstatedir}/snapd/assertions
 %dir %{_sharedstatedir}/snapd/desktop
+%dir %{_sharedstatedir}/snapd/desktop/applications
+%dir %{_sharedstatedir}/snapd/hostfs
 %dir %{_sharedstatedir}/snapd/mount
 %dir %{_sharedstatedir}/snapd/seccomp
+%dir %{_sharedstatedir}/snapd/seccomp/profiles
 %dir %{_sharedstatedir}/snapd/snaps
 %dir %{_sharedstatedir}/snapd/snap
+%ghost %dir %{_sharedstatedir}/snapd/snap/bin
 %dir %{_localstatedir}/snap
+%ghost %{_sharedstatedir}/snapd/state.json
 
 %files -n snap-confine
 %doc cmd/snap-confine/PORTING
@@ -592,6 +600,12 @@ fi
 
 
 %changelog
+* Wed May 17 2017 Neal Gompa <ngompa13@gmail.com> - 2.26.3-1
+- Update to snapd 2.26.3
+- Drop merged and unused patches
+- Cover more Snappy content for proper erasure on final uninstall (#1444422)
+- Add temporary fix to ensure generated seccomp profiles don't break snapctl
+
 * Mon May 01 2017 Neal Gompa <ngompa13@gmail.com> - 2.25-1
 - Update to snapd 2.25
 - Ensure all Snappy content is gone on final uninstall (#1444422)

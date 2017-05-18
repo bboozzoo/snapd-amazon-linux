@@ -1,0 +1,28 @@
+From a604e6e94cca5251a1a1ae31907832e023b38fa7 Mon Sep 17 00:00:00 2001
+From: Simon Fels <simon.fels@canonical.com>
+Date: Wed, 17 May 2017 16:18:54 +0200
+Subject: [PATCH] interfaces/seccomp: allow bind() for Fedora and openSUSE
+
+---
+ interfaces/seccomp/template.go | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/interfaces/seccomp/template.go b/interfaces/seccomp/template.go
+index f9a0ed6..a52ab6f 100644
+--- a/interfaces/seccomp/template.go
++++ b/interfaces/seccomp/template.go
+@@ -548,4 +548,14 @@ pwritev
+ # This is an older interface and single entry point that can be used instead
+ # of socket(), bind(), connect(), etc individually.
+ socketcall
++
++# Allow bind() as the golang net package uses this on initialization when
++# loaded the first time and on systems without an LSM system this kills
++# snapctl when executed in a hook when the network-bind interface isn't
++# plugged. See https://forum.snapcraft.io/t/hooks-calling-snapctl-are-broken-with-just-seccomp-enabled/658/
++# for more details.
++#
++# NOTE: This is only meant for Fedora and openSUSE and shouldn't be
++# applied upstream.
++bind
+ `)

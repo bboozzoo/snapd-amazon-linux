@@ -57,7 +57,7 @@ if [ "$1" = "purge" ]; then
             rm -rf "/var/snap/$snap/$rev"
             rm -rf "/var/snap/$snap/common"
             rm -f "/var/snap/$snap/current"
-            # opportunistic remove (may fail if there are still revisions left
+            # opportunistic remove (may fail if there are still revisions left)
             for d in "${SNAP_MOUNT_DIR}/$snap" "/var/snap/$snap"; do
                 if [ -d "$d" ]; then
                     rmdir --ignore-fail-on-non-empty $d
@@ -70,18 +70,24 @@ if [ "$1" = "purge" ]; then
         rm -f "/etc/systemd/system/multi-user.target.wants/$unit"
     done
 
-    echo "Final directory cleanup"
-    if [ -d "${SNAP_MOUNT_DIR}/bin" ]; then
-        rmdir --ignore-fail-on-non-empty ${SNAP_MOUNT_DIR}/bin
-    fi
-
-    rm -rf /var/snap/*
-
     echo "Discarding preserved snap namespaces"
     # opportunistic as those might not be actually mounted
     for mnt in /run/snapd/ns/*.mnt; do
         umount -l "$mnt" || true
     done
     umount -l /run/snapd/ns/ || true
+
+
+    echo "Removing downloaded snaps"
+    rm -rf /var/lib/snapd/snaps/*
+
+    echo "Final directory cleanup"
+    rm -rf ${SNAP_MOUNT_DIR}/*
+    rm -rf /var/snap/*
+
+    echo "Removing leftover snap shared state data"
+    rm -rf /var/lib/snapd/seccomp/profiles/*
+    rm -rf /var/lib/snapd/device/*
+    rm -rf /var/lib/snapd/assertions/*
 
 fi
