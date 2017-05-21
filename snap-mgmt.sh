@@ -8,6 +8,7 @@
 set -e
 
 SNAP_MOUNT_DIR="/var/lib/snapd/snap"
+SNAP_UNIT_PREFIX="var-lib-snapd-snap"
 
 systemctl_stop() {
     unit="$1"
@@ -23,8 +24,8 @@ if [ "$1" = "purge" ]; then
         umount -l ${SNAP_MOUNT_DIR} || true
     fi
 
-    mounts=$(systemctl list-unit-files --full | grep '^snap[-.].*\.mount' | cut -f1 -d ' ')
-    services=$(systemctl list-unit-files --full | grep '^snap[-.].*\.service' | cut -f1 -d ' ')
+    mounts=$(systemctl list-unit-files --full | grep "^${SNAP_UNIT_PREFIX}[-.].*\.mount" | cut -f1 -d ' ')
+    services=$(systemctl list-unit-files --full | grep "^${SNAP_UNIT_PREFIX}[-.].*\.service" | cut -f1 -d ' ')
     for unit in $services $mounts; do
         # ensure its really a snap mount unit or systemd unit
         if ! grep -q 'What=/var/lib/snapd/snaps/' "/etc/systemd/system/$unit" && ! grep -q 'X-Snappy=yes' "/etc/systemd/system/$unit"; then
@@ -37,8 +38,8 @@ if [ "$1" = "purge" ]; then
 
         # if it is a mount unit, we can find the snap name in the mount
         # unit (we just ignore unit files)
-        snap=$(grep 'Where=${SNAP_MOUNT_DIR}/' "/etc/systemd/system/$unit"|cut -f3 -d/)
-        rev=$(grep 'Where=${SNAP_MOUNT_DIR}/' "/etc/systemd/system/$unit"|cut -f4 -d/)
+        snap=$(grep "Where=${SNAP_MOUNT_DIR}/" "/etc/systemd/system/$unit"|cut -f3 -d/)
+        rev=$(grep "Where=${SNAP_MOUNT_DIR}/" "/etc/systemd/system/$unit"|cut -f4 -d/)
         if [ -n "$snap" ]; then
             echo "Removing snap $snap"
             # aliases

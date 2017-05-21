@@ -38,7 +38,7 @@
 
 Name:           snapd
 Version:        2.26.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -600,15 +600,19 @@ fi
 
 
 %changelog
+* Sun May 21 2017 Neal Gompa <ngompa13@gmail.com> - 2.26.3-2
+- Fix error in script for removing Snappy content (RH#1444422)
+- Adjust changelog bug references to be specific on origin
+
 * Wed May 17 2017 Neal Gompa <ngompa13@gmail.com> - 2.26.3-1
 - Update to snapd 2.26.3
 - Drop merged and unused patches
-- Cover more Snappy content for proper erasure on final uninstall (#1444422)
+- Cover more Snappy content for proper erasure on final uninstall (RH#1444422)
 - Add temporary fix to ensure generated seccomp profiles don't break snapctl
 
 * Mon May 01 2017 Neal Gompa <ngompa13@gmail.com> - 2.25-1
 - Update to snapd 2.25
-- Ensure all Snappy content is gone on final uninstall (#1444422)
+- Ensure all Snappy content is gone on final uninstall (RH#1444422)
 
 * Tue Apr 11 2017 Neal Gompa <ngompa13@gmail.com> - 2.24-1
 - Update to snapd 2.24
