@@ -8,7 +8,7 @@
 set -e
 
 SNAP_MOUNT_DIR="/var/lib/snapd/snap"
-SNAP_UNIT_PREFIX="var-lib-snapd-snap"
+SNAP_UNIT_PREFIX=$(systemd-escape -p ${SNAP_MOUNT_DIR})
 
 systemctl_stop() {
     unit="$1"
