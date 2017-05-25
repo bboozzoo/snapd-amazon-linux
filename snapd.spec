@@ -38,7 +38,7 @@
 
 Name:           snapd
 Version:        2.26.3
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -369,6 +369,7 @@ install -d -p %{buildroot}%{_sysconfdir}/profile.d
 install -d -p %{buildroot}%{_sysconfdir}/sysconfig
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/assertions
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/desktop/applications
+install -d -p %{buildroot}%{_sharedstatedir}/snapd/device
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/hostfs
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/mount
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/seccomp/profiles
@@ -512,6 +513,7 @@ popd
 %dir %{_sharedstatedir}/snapd/assertions
 %dir %{_sharedstatedir}/snapd/desktop
 %dir %{_sharedstatedir}/snapd/desktop/applications
+%dir %{_sharedstatedir}/snapd/device
 %dir %{_sharedstatedir}/snapd/hostfs
 %dir %{_sharedstatedir}/snapd/mount
 %dir %{_sharedstatedir}/snapd/seccomp
@@ -600,6 +602,9 @@ fi
 
 
 %changelog
+* Thu May 25 2017 Neal Gompa <ngompa13@gmail.com> - 2.26.3-3
+- Cover even more stuff for proper erasure on final uninstall (RH#1444422)
+
 * Sun May 21 2017 Neal Gompa <ngompa13@gmail.com> - 2.26.3-2
 - Fix error in script for removing Snappy content (RH#1444422)
 - Adjust changelog bug references to be specific on origin
