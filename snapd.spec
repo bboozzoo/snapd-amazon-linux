@@ -38,7 +38,7 @@
 
 Name:           snapd
 Version:        2.26.3
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -602,6 +602,9 @@ fi
 
 
 %changelog
+* Thu Jul 27 2017 Fedora Release Engineering <releng@fedoraproject.org> - 2.26.3-4
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_27_Mass_Rebuild
+
 * Thu May 25 2017 Neal Gompa <ngompa13@gmail.com> - 2.26.3-3
 - Cover even more stuff for proper erasure on final uninstall (RH#1444422)
 
