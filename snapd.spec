@@ -48,7 +48,7 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.27
+Version:        2.27.1
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
@@ -252,6 +252,7 @@ Provides:      golang(%{import_path}/osutil) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/assertstate) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/auth) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/cmdstate) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/configstate) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/configstate/config) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/devicestate) = %{version}-%{release}
@@ -264,9 +265,10 @@ Provides:      golang(%{import_path}/overlord/snapstate) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/snapstate/backend) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/state) = %{version}-%{release}
 Provides:      golang(%{import_path}/partition) = %{version}-%{release}
+Provides:      golang(%{import_path}/partition/androidbootenv) = %{version}-%{release}
 Provides:      golang(%{import_path}/partition/grubenv) = %{version}-%{release}
+Provides:      golang(%{import_path}/partition/ubootenv) = %{version}-%{release}
 Provides:      golang(%{import_path}/progress) = %{version}-%{release}
-Provides:      golang(%{import_path}/provisioning) = %{version}-%{release}
 Provides:      golang(%{import_path}/release) = %{version}-%{release}
 Provides:      golang(%{import_path}/snap) = %{version}-%{release}
 Provides:      golang(%{import_path}/snap/snapdir) = %{version}-%{release}
@@ -280,7 +282,9 @@ Provides:      golang(%{import_path}/tests/lib/fakestore/refresh) = %{version}-%
 Provides:      golang(%{import_path}/tests/lib/fakestore/store) = %{version}-%{release}
 Provides:      golang(%{import_path}/testutil) = %{version}-%{release}
 Provides:      golang(%{import_path}/timeout) = %{version}-%{release}
+Provides:      golang(%{import_path}/timeutil) = %{version}-%{release}
 Provides:      golang(%{import_path}/wrappers) = %{version}-%{release}
+Provides:      golang(%{import_path}/x11) = %{version}-%{release}
 
 
 %description devel
@@ -354,7 +358,7 @@ GOFLAGS="$GOFLAGS -tags withtestkeys"
 
 # We don't need mvo5 fork for seccomp, as we have seccomp 2.3.x
 sed -e "s:github.com/mvo5/libseccomp-golang:github.com/seccomp/libseccomp-golang:g" -i cmd/snap-seccomp/*.go
-%gobuild -o bin/snap-seccomp %{import_path}/cmd/snap-seccomp
+%gobuild -o bin/snap-seccomp $GOFLAGS %{import_path}/cmd/snap-seccomp
 
 # Build SELinux module
 pushd ./data/selinux
@@ -632,6 +636,23 @@ fi
 
 
 %changelog
+* Mon Aug 14 2017 Neal Gompa <ngompa13@gmail.com> - 2.27.1-1
+- Release 2.27.1 to Fedora
+
+* Mon Aug 14 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.27.1
+ - tests: use dnf --refresh install to avert stale cache
+ - tests: fix test failure on 14.04 due to old version of
+   flock
+ - updates for unity7/x11, browser-support, network-control,
+   mount-observe
+ - interfaces/unity7,x11: update for NETLINK_KOBJECT_UEVENT
+ - interfaces/browser-support: update sysfs reads for
+   newer browser versions
+ - interfaces/network-control: rw for ieee80211 advanced wireless
+ - interfaces/mount-observe: allow read on sysfs entries for block
+   devices
+
 * Thu Aug 10 2017 Neal Gompa <ngompa13@gmail.com> - 2.27-1
 - Release 2.27 to Fedora (RH#1458086)
 
