@@ -49,7 +49,7 @@
 
 Name:           snapd
 Version:        2.27.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -636,6 +636,9 @@ fi
 
 
 %changelog
+* Wed Aug 16 2017 Neal Gompa <ngompa13@gmail.com> - 2.27.2-2
+- Bump to rebuild for F27 and Rawhide
+
 * Wed Aug 16 2017 Neal Gompa <ngompa13@gmail.com> - 2.27.2-1
 - Release 2.27.2 to Fedora (RH#1482173)
 
