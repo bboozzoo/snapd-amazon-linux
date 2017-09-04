@@ -1,0 +1,29 @@
+From 182c36b42fac2dfc51f611c43011eb4f9b29ab56 Mon Sep 17 00:00:00 2001
+From: James Henstridge <james@jamesh.id.au>
+Date: Tue, 11 Jul 2017 13:52:16 +0800
+Subject: [PATCH 1001/1002] vendor: Vendor godbus.
+
+---
+ vendor/vendor.json | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/vendor/vendor.json b/vendor/vendor.json
+index 94cd031f9..8715a0db5 100644
+--- a/vendor/vendor.json
++++ b/vendor/vendor.json
+@@ -19,6 +19,12 @@
+ 			"revisionTime": "2014-05-03T19:37:39Z"
+ 		},
+ 		{
++			"checksumSHA1": "LIpi0bDVAl3e0Xza8gohpKkH0+I=",
++			"path": "github.com/godbus/dbus",
++			"revision": "bd29ed602e2cf4207ebcabcd530259169e4289ba",
++			"revisionTime": "2017-07-07T17:46:28Z"
++		},
++		{
+ 			"checksumSHA1": "iIUYZyoanCQQTUaWsu8b+iOSPt4=",
+ 			"path": "github.com/gorilla/context",
+ 			"revision": "1c83b3eabd45b6d76072b66b746c20815fb2872d",
+-- 
+2.13.5
+

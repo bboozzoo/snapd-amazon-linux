@@ -48,8 +48,8 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.27.2
-Release:        2%{?dist}
+Version:        2.27.5
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -62,6 +62,11 @@ Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
+
+# Backports userd from upstream
+Patch1001:      1001-vendor-Vendor-godbus.patch
+Patch1002:      1002-cmd-snap-add-userd-command-to-replace-snapd-xdg-open.patch
+
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -89,6 +94,8 @@ Requires:       %{name}-selinux = %{version}-%{release}
 %if ! 0%{?with_bundled}
 BuildRequires: golang(github.com/cheggaaa/pb)
 BuildRequires: golang(github.com/coreos/go-systemd/activation)
+BuildRequires: golang(github.com/godbus/dbus)
+BuildRequires: golang(github.com/godbus/dbus/introspect)
 BuildRequires: golang(github.com/gorilla/mux)
 BuildRequires: golang(github.com/jessevdk/go-flags)
 BuildRequires: golang(github.com/mvo5/uboot-go/uenv)
@@ -174,6 +181,8 @@ BuildArch:     noarch
 %if ! 0%{?with_bundled}
 Requires:      golang(github.com/cheggaaa/pb)
 Requires:      golang(github.com/coreos/go-systemd/activation)
+Requires:      golang(github.com/godbus/dbus)
+Requires:      golang(github.com/godbus/dbus/introspect)
 Requires:      golang(github.com/gorilla/mux)
 Requires:      golang(github.com/jessevdk/go-flags)
 Requires:      golang(github.com/mvo5/uboot-go/uenv)
@@ -197,6 +206,8 @@ Requires:      golang(gopkg.in/yaml.v2)
 # *sigh*... I hate golang...
 Provides:      bundled(golang(github.com/cheggaaa/pb))
 Provides:      bundled(golang(github.com/coreos/go-systemd/activation))
+Provides:      bundled(golang(github.com/godbus/dbus))
+Provides:      bundled(golang(github.com/godbus/dbus/introspect))
 Provides:      bundled(golang(github.com/gorilla/mux))
 Provides:      bundled(golang(github.com/jessevdk/go-flags))
 Provides:      bundled(golang(github.com/mvo5/uboot-go/uenv))
@@ -379,8 +390,8 @@ autoreconf --force --install --verbose
 %make_build
 popd
 
-# Build systemd units
-pushd ./data/systemd
+# Build systemd and dbus units
+pushd ./data
 make BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}" \
      SYSTEMDSYSTEMUNITDIR="%{_unitdir}" \
      SNAP_MOUNT_DIR="%{_sharedstatedir}/snapd/snap" \
@@ -438,8 +449,8 @@ rm -rfv %{buildroot}%{_sysconfdir}/apparmor.d
 rm -fv %{buildroot}%{_bindir}/ubuntu-core-launcher
 popd
 
-# Install all systemd units
-pushd ./data/systemd
+# Install all systemd and dbus units
+pushd ./data
 %make_install SYSTEMDSYSTEMUNITDIR="%{_unitdir}" BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}"
 # Remove snappy core specific units
 rm -fv %{buildroot}%{_unitdir}/snapd.system-shutdown.service
@@ -541,6 +552,7 @@ popd
 %{_unitdir}/snapd.autoimport.service
 %{_unitdir}/snapd.refresh.service
 %{_unitdir}/snapd.refresh.timer
+%{_datadir}/dbus-1/services/io.snapcraft.Launcher.service
 %config(noreplace) %{_sysconfdir}/sysconfig/snapd
 %dir %{_sharedstatedir}/snapd
 %dir %{_sharedstatedir}/snapd/assertions
@@ -636,6 +648,28 @@ fi
 
 
 %changelog
+* Mon Sep 04 2017 Neal Gompa <ngompa13@gmail.com> - 2.27.5-1
+- Release 2.27.5 to Fedora (RH#1483177)
+- Backport userd from upstream to support xdg-open
+
+* Wed Aug 30 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.27.5
+  - interfaces: fix network-manager plug regression
+  - hooks: do not error when hook handler is not registered
+  - interfaces/alsa,pulseaudio: allow read on udev data for sound
+  - interfaces/optical-drive: read access to udev data for /dev/scd*
+  - interfaces/browser-support: read on /proc/vmstat and misc udev
+    data
+
+* Thu Aug 24 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.27.4
+  - snap-seccomp: add secondary arch for unrestricted snaps as well
+
+* Fri Aug 18 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.27.3
+  - systemd: disable `Nice=-5` to fix error when running inside lxdSee
+    https://bugs.launchpad.net/snapd/+bug/1709536
+
 * Wed Aug 16 2017 Neal Gompa <ngompa13@gmail.com> - 2.27.2-2
 - Bump to rebuild for F27 and Rawhide
 
