@@ -48,7 +48,7 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.27.5
+Version:        2.27.6
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
@@ -648,6 +648,15 @@ fi
 
 
 %changelog
+* Sun Sep 10 2017 Neal Gompa <ngompa13@gmail.com> - 2.27.6-1
+- Release 2.27.6 to Fedora (RH#1489437)
+
+* Thu Sep 07 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.27.6
+  - interfaces: add udev netlink support to hardware-observe
+  - interfaces/network-{control,observe}: allow receiving
+    kobject_uevent() messages
+
 * Mon Sep 04 2017 Neal Gompa <ngompa13@gmail.com> - 2.27.5-1
 - Release 2.27.5 to Fedora (RH#1483177)
 - Backport userd from upstream to support xdg-open
