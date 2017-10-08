@@ -1,0 +1,198 @@
+From 89bd83f69e2b8cabdeaf61c2f46f88d71658348c Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Neal=20Gompa=20=28=E3=83=8B=E3=83=BC=E3=83=AB=E3=83=BB?=
+ =?UTF-8?q?=E3=82=B4=E3=83=B3=E3=83=91=29?= <ngompa13@gmail.com>
+Date: Wed, 4 Oct 2017 10:43:13 -0400
+Subject: [PATCH] release,cmd,dirs: Redo the distro checks to take into account
+ distribution families
+
+* release: Add support for processing ID_LIKE from os-release(5)
+
+This will allow us to handle distribution families better.
+
+Signed-off-by: Neal Gompa <ngompa13@gmail.com>
+
+* cmd: Adjust re-exec test to test based on distribution family
+
+By testing on the distribution family, we don't have to keep adding
+distribution IDs to disable re-exec where it won't work.
+
+Signed-off-by: Neal Gompa <ngompa13@gmail.com>
+
+* dirs: Adjust directory test to test based on distribution family
+
+By testing on the distribution family, we don't have to keep adding
+distribution IDs to deal with the directory path differences.
+
+Signed-off-by: Neal Gompa <ngompa13@gmail.com>
+
+* add new release.DistroLike() helper and tweak a bit
+---
+ cmd/cmd.go              |  3 +--
+ dirs/dirs.go            |  5 ++---
+ dirs/dirs_test.go       | 24 +++++++++++++-----------
+ release/release.go      | 18 ++++++++++++++++--
+ release/release_test.go | 29 +++++++++++++++++++++++++++++
+ 5 files changed, 61 insertions(+), 18 deletions(-)
+
+diff --git a/cmd/cmd.go b/cmd/cmd.go
+index b5f4f56d2..a09e53e2d 100644
+--- a/cmd/cmd.go
++++ b/cmd/cmd.go
+@@ -66,8 +66,7 @@ func distroSupportsReExec() bool {
+ 	if !release.OnClassic {
+ 		return false
+ 	}
+-	switch release.ReleaseInfo.ID {
+-	case "fedora", "centos", "rhel", "opensuse", "suse", "poky", "arch", "manjaro", "lirios":
++	if !release.DistroLike("debian", "ubuntu") {
+ 		logger.Debugf("re-exec not supported on distro %q yet", release.ReleaseInfo.ID)
+ 		return false
+ 	}
+diff --git a/dirs/dirs.go b/dirs/dirs.go
+index 7b8e9cb98..78ef8dbc4 100644
+--- a/dirs/dirs.go
++++ b/dirs/dirs.go
+@@ -156,10 +156,9 @@ func SetRootDir(rootdir string) {
+ 	}
+ 	GlobalRootDir = rootdir
+ 
+-	switch release.ReleaseInfo.ID {
+-	case "fedora", "centos", "rhel", "arch", "manjaro", "lirios":
++	if release.DistroLike("fedora", "arch") {
+ 		SnapMountDir = filepath.Join(rootdir, "/var/lib/snapd/snap")
+-	default:
++	} else {
+ 		SnapMountDir = filepath.Join(rootdir, defaultSnapMountDir)
+ 	}
+ 
+diff --git a/dirs/dirs_test.go b/dirs/dirs_test.go
+index 9746233a0..2950affed 100644
+--- a/dirs/dirs_test.go
++++ b/dirs/dirs_test.go
+@@ -78,20 +78,22 @@ func (s *DirsTestSuite) TestClassicConfinementSymlinkWorkaround(c *C) {
+ }
+ 
+ func (s *DirsTestSuite) TestClassicConfinementSupportOnSpecificDistributions(c *C) {
+-	for _, current := range []struct {
+-		Name     string
++	for _, t := range []struct {
++		ID       string
++		IDLike   []string
+ 		Expected bool
+ 	}{
+-		{"fedora", false},
+-		{"rhel", false},
+-		{"centos", false},
+-		{"ubuntu", true},
+-		{"debian", true},
+-		{"suse", true},
+-		{"yocto", true}} {
+-		reset := release.MockReleaseInfo(&release.OS{ID: current.Name})
++		{"fedora", nil, false},
++		{"rhel", []string{"fedora"}, false},
++		{"centos", []string{"fedora"}, false},
++		{"ubuntu", []string{"debian"}, true},
++		{"debian", nil, true},
++		{"suse", nil, true},
++		{"yocto", nil, true},
++	} {
++		reset := release.MockReleaseInfo(&release.OS{ID: t.ID, IDLike: t.IDLike})
+ 		defer reset()
+ 		dirs.SetRootDir("/")
+-		c.Assert(dirs.SupportsClassicConfinement(), Equals, current.Expected)
++		c.Check(dirs.SupportsClassicConfinement(), Equals, t.Expected, Commentf("unexpected result for %v", t.ID))
+ 	}
+ }
+diff --git a/release/release.go b/release/release.go
+index 7dee48808..b84260374 100644
+--- a/release/release.go
++++ b/release/release.go
+@@ -26,6 +26,7 @@ import (
+ 	"unicode"
+ 
+ 	"github.com/snapcore/snapd/apparmor"
++	"github.com/snapcore/snapd/strutil"
+ )
+ 
+ // Series holds the Ubuntu Core series for snapd to use.
+@@ -33,8 +34,9 @@ var Series = "16"
+ 
+ // OS contains information about the system extracted from /etc/os-release.
+ type OS struct {
+-	ID        string `json:"id"`
+-	VersionID string `json:"version-id,omitempty"`
++	ID        string   `json:"id"`
++	IDLike    []string `json:"-"`
++	VersionID string   `json:"version-id,omitempty"`
+ }
+ 
+ var (
+@@ -59,6 +61,15 @@ func (o *OS) ForceDevMode() bool {
+ 	return level != apparmor.Full
+ }
+ 
++func DistroLike(distros ...string) bool {
++	for _, distro := range distros {
++		if ReleaseInfo.ID == distro || strutil.ListContains(ReleaseInfo.IDLike, distro) {
++			return true
++		}
++	}
++	return false
++}
++
+ var (
+ 	osReleasePath         = "/etc/os-release"
+ 	fallbackOsReleasePath = "/usr/lib/os-release"
+@@ -103,6 +114,9 @@ func readOSRelease() OS {
+ 			// not being too good at reading comprehension.
+ 			// Works around e.g. lp:1602317
+ 			osRelease.ID = strings.Fields(strings.ToLower(v))[0]
++		case "ID_LIKE":
++			// This is like ID, except it's a space separated list... hooray?
++			osRelease.IDLike = strings.Fields(strings.ToLower(v))
+ 		case "VERSION_ID":
+ 			osRelease.VersionID = v
+ 		}
+diff --git a/release/release_test.go b/release/release_test.go
+index 701272410..18a345ffc 100644
+--- a/release/release_test.go
++++ b/release/release_test.go
+@@ -93,6 +93,35 @@ BUG_REPORT_URL="https://bugs.launchpad.net/elementary/+filebug"`
+ 	c.Check(os.VersionID, Equals, "0.4")
+ }
+ 
++func (s *ReleaseTestSuite) TestFamilyOSRelease(c *C) {
++	mockOSRelease := filepath.Join(c.MkDir(), "mock-os-release")
++	dump := `NAME="CentOS Linux"
++VERSION="7 (Core)"
++ID="centos"
++ID_LIKE="rhel fedora"
++VERSION_ID="7"
++PRETTY_NAME="CentOS Linux 7 (Core)"
++ANSI_COLOR="0;31"
++CPE_NAME="cpe:/o:centos:centos:7"
++HOME_URL="https://www.centos.org/"
++BUG_REPORT_URL="https://bugs.centos.org/"
++
++CENTOS_MANTISBT_PROJECT="CentOS-7"
++CENTOS_MANTISBT_PROJECT_VERSION="7"
++REDHAT_SUPPORT_PRODUCT="centos"
++REDHAT_SUPPORT_PRODUCT_VERSION="7"`
++	err := ioutil.WriteFile(mockOSRelease, []byte(dump), 0644)
++	c.Assert(err, IsNil)
++
++	reset := release.MockOSReleasePath(mockOSRelease)
++	defer reset()
++
++	os := release.ReadOSRelease()
++	c.Check(os.ID, Equals, "centos")
++	c.Check(os.VersionID, Equals, "7")
++	c.Check(os.IDLike, DeepEquals, []string{"rhel", "fedora"})
++}
++
+ func (s *ReleaseTestSuite) TestReadOSReleaseNotFound(c *C) {
+ 	reset := release.MockOSReleasePath("not-there")
+ 	defer reset()
+-- 
+2.13.5
+

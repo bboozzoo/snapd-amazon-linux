@@ -1,0 +1,43 @@
+From 66a4e062a8ba6ef03e9587a82fc0bc02d7f6c4c2 Mon Sep 17 00:00:00 2001
+From: Neal Gompa <ngompa13@gmail.com>
+Date: Wed, 6 Sep 2017 07:34:18 +0000
+Subject: [PATCH] Revert "switch to canonical path for gopkg.in/cheggaaa/pb.v1"
+
+This reverts commit f033646f3db7d32978198c7e767cfa5e29d51ee4.
+---
+ progress/progress.go | 2 +-
+ vendor/vendor.json   | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/progress/progress.go b/progress/progress.go
+index c332120..820c6db 100644
+--- a/progress/progress.go
++++ b/progress/progress.go
+@@ -25,8 +25,8 @@ import (
+ 	"os"
+ 	"unicode"
+ 
++	"github.com/cheggaaa/pb"
+ 	"golang.org/x/crypto/ssh/terminal"
+-	"gopkg.in/cheggaaa/pb.v1"
+ )
+ 
+ // Meter is an interface to show progress to the user
+diff --git a/vendor/vendor.json b/vendor/vendor.json
+index 95f954c..f05af88 100644
+--- a/vendor/vendor.json
++++ b/vendor/vendor.json
+@@ -151,8 +151,8 @@
+ 			"revisionTime": "2016-12-08T18:13:25Z"
+ 		},
+ 		{
+-			"checksumSHA1": "qZxtczIIW7+bjlZ7QbfUJg7RI+s=",
+-			"path": "gopkg.in/cheggaaa/pb.v1",
++			"checksumSHA1": "f4UJKXymPS31lDRMfsmPA4PvwVw=",
++			"path": "github.com/cheggaaa/pb",
+ 			"revision": "6e9d17711bb763b26b68b3931d47f24c1323abab",
+ 			"revisionTime": "2016-08-12T10:57:48Z"
+ 		},
+-- 
+2.9.4
+
