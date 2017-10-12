@@ -48,7 +48,7 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 Name:           snapd
-Version:        2.28.1
+Version:        2.28.4
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
@@ -62,9 +62,6 @@ Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
-
-# Cherry picked from upstream: https://github.com/snapcore/snapd/commit/89bd83f69e2b8cabdeaf61c2f46f88d71658348c
-Patch0002:      0001-release-cmd-dirs-Redo-the-distro-checks-to-take-into.patch
 
 # Revert import path change for cheggaaa/pb
 Patch1001:      0001-Revert-switch-to-canonical-path-for-gopkg.in-cheggaa.patch
@@ -662,6 +659,27 @@ fi
 
 
 %changelog
+* Thu Oct 12 2017 Neal Gompa <ngompa13@gmail.com> - 2.28.4-1
+- Release 2.28.4 to Fedora (RH#1501141)
+- Drop distro check backport patches (released with 2.28.2)
+
+* Wed Oct 11 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.28.4
+  - interfaces/opengl: don't udev tag nvidia devices and use snap-
+    confine instead
+  - debian: fix replaces/breaks for snap-xdg-open (thanks to apw!)
+
+* Wed Oct 11 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.28.3
+  - interfaces/lxd: lxd slot implementation can also be an app
+    snap
+
+* Tue Oct 10 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.28.2
+  - interfaces: fix udev rules for tun
+  - release,cmd,dirs: Redo the distro checks to take into account
+    distribution families
+
 * Sun Oct 08 2017 Neal Gompa <ngompa13@gmail.com> - 2.28.1-1
 - Release 2.28.1 to Fedora (RH#1495852)
 - Drop userd backport patches, they are part of 2.28 release
