@@ -673,7 +673,7 @@ fi
 %changelog
 * Sat Oct 14 2017 Neal Gompa <ngompa13@gmail.com> - 2.28.5-1
 - Release 2.28.5 to Fedora (RH#1502186)
-- Build snap-exec and snap-update-ns statically to support base snaps
+- Build snap-exec and snap-update-ns statically to support base snaps (F26+)
 
 * Fri Oct 13 2017 Michael Vogt <mvo@ubuntu.com>
 - New upstream release 2.28.5
