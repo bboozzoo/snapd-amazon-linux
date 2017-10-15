@@ -48,11 +48,25 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
 # Until we have a way to add more extldflags to gobuild macro...
+%if 0%{?fedora} >= 26
 %define gobuild_static(o:) go build -buildmode pie -compiler gc -tags=rpm_crashtraceback -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
+%endif
+%if 0%{?fedora} == 25
+%define gobuild_static(o:) go build -compiler gc -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '-static'" -a -v -x %{?**};
+%endif
+%if 0%{?rhel} == 7
+%define gobuild_static(o:) go build -compiler gc -tags=rpm_crashtraceback -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
+%endif
+
+# These macros are not defined in RHEL 7
+%if 0%{?rhel} == 7
+%define gobuild(o:) go build -compiler gc -tags=rpm_crashtraceback -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags'" -a -v -x %{?**};
+%define gotest() go test -compiler gc -ldflags "${LDFLAGS:-}" %{?**};
+%endif
 
 Name:           snapd
 Version:        2.28.5
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -60,7 +74,7 @@ URL:            https://%{provider_prefix}
 %if ! 0%{?with_bundled}
 Source0:        https://%{provider_prefix}/archive/%{version}/%{name}-%{version}.tar.gz
 %else
-Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.vendor.orig.tar.xz
+Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.vendor.tar.xz
 %endif
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
@@ -143,7 +157,9 @@ BuildRequires:  pkgconfig(systemd)
 BuildRequires:  pkgconfig(udev)
 BuildRequires:  xfsprogs-devel
 BuildRequires:  glibc-static
+%if ! 0%{?rhel}
 BuildRequires:  libseccomp-static
+%endif
 BuildRequires:  valgrind
 BuildRequires:  %{_bindir}/rst2man
 %if 0%{?fedora} >= 25
@@ -378,17 +394,17 @@ GOFLAGS="$GOFLAGS -tags withtestkeys"
 
 # To ensure things work correctly with base snaps,
 # snap-exec and snap-update-ns need to be built statically
-%if 0%{?fedora} && 0%{?fedora} < 26
-# The static build doesn't seem to work in Fedora 25..
-%gobuild -o bin/snap-exec $GOFLAGS %{import_path}/cmd/snap-exec
-%gobuild -o bin/snap-update-ns $GOFLAGS %{import_path}/cmd/snap-update-ns
-%else
 %gobuild_static -o bin/snap-exec $GOFLAGS %{import_path}/cmd/snap-exec
 %gobuild_static -o bin/snap-update-ns $GOFLAGS %{import_path}/cmd/snap-update-ns
-%endif
 
+%if ! 0%{?with_bundled}
 # We don't need mvo5 fork for seccomp, as we have seccomp 2.3.x
 sed -e "s:github.com/mvo5/libseccomp-golang:github.com/seccomp/libseccomp-golang:g" -i cmd/snap-seccomp/*.go
+%endif
+%if 0%{?rhel}
+# There's no static link library for libseccomp in RHEL/CentOS...
+sed -e "s/-Bstatic -lseccomp/-Bstatic/g" -i cmd/snap-seccomp/*.go
+%endif
 %gobuild -o bin/snap-seccomp $GOFLAGS %{import_path}/cmd/snap-seccomp
 
 # Build SELinux module
@@ -671,9 +687,13 @@ fi
 
 
 %changelog
+* Sat Oct 14 2017 Neal Gompa <ngompa13@gmail.com> - 2.28.5-2
+- Properly fix the build for Fedora 25
+- Incorporate misc build fixes
+
 * Sat Oct 14 2017 Neal Gompa <ngompa13@gmail.com> - 2.28.5-1
 - Release 2.28.5 to Fedora (RH#1502186)
-- Build snap-exec and snap-update-ns statically to support base snaps (F26+)
+- Build snap-exec and snap-update-ns statically to support base snaps
 
 * Fri Oct 13 2017 Michael Vogt <mvo@ubuntu.com>
 - New upstream release 2.28.5
