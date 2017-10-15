@@ -47,8 +47,11 @@
 
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.refresh.timer snapd.refresh.service
 
+# Until we have a way to add more extldflags to gobuild macro...
+%define gobuild_static(o:) go build -buildmode pie -compiler gc -tags=rpm_crashtraceback -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
+
 Name:           snapd
-Version:        2.28.4
+Version:        2.28.5
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
@@ -371,9 +374,12 @@ GOFLAGS="$GOFLAGS -tags withtestkeys"
 # set tags.
 %gobuild -o bin/snapd $GOFLAGS %{import_path}/cmd/snapd
 %gobuild -o bin/snap $GOFLAGS %{import_path}/cmd/snap
-%gobuild -o bin/snap-exec $GOFLAGS %{import_path}/cmd/snap-exec
 %gobuild -o bin/snapctl $GOFLAGS %{import_path}/cmd/snapctl
-%gobuild -o bin/snap-update-ns $GOFLAGS %{import_path}/cmd/snap-update-ns
+
+# To ensure things work correctly with base snaps,
+# snap-exec and snap-update-ns need to be built statically
+%gobuild_static -o bin/snap-exec $GOFLAGS %{import_path}/cmd/snap-exec
+%gobuild_static -o bin/snap-update-ns $GOFLAGS %{import_path}/cmd/snap-update-ns
 
 # We don't need mvo5 fork for seccomp, as we have seccomp 2.3.x
 sed -e "s:github.com/mvo5/libseccomp-golang:github.com/seccomp/libseccomp-golang:g" -i cmd/snap-seccomp/*.go
@@ -659,6 +665,20 @@ fi
 
 
 %changelog
+* Sat Oct 14 2017 Neal Gompa <ngompa13@gmail.com> - 2.28.5-1
+- Release 2.28.5 to Fedora (RH#1502186)
+- Build snap-exec and snap-update-ns statically to support base snaps
+
+* Fri Oct 13 2017 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.28.5
+  - snap-confine: cleanup broken nvidia udev tags
+  - cmd/snap-confine: update valid security tag regexp
+  - overlord/ifacestate: refresh udev backend on startup
+  - dbus: ensure io.snapcraft.Launcher.service is created on re-
+    exec
+  - snap-confine: add support for handling /dev/nvidia-modeset
+  - interfaces/network-control: remove incorrect rules for tun
+
 * Thu Oct 12 2017 Neal Gompa <ngompa13@gmail.com> - 2.28.4-1
 - Release 2.28.4 to Fedora (RH#1501141)
 - Drop distro check backport patches (released with 2.28.2)
