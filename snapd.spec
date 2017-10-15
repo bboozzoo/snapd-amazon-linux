@@ -378,8 +378,14 @@ GOFLAGS="$GOFLAGS -tags withtestkeys"
 
 # To ensure things work correctly with base snaps,
 # snap-exec and snap-update-ns need to be built statically
+%if 0%{?fedora} && 0%{?fedora} < 26
+# The static build doesn't seem to work in Fedora 25..
+%gobuild -o bin/snap-exec $GOFLAGS %{import_path}/cmd/snap-exec
+%gobuild -o bin/snap-update-ns $GOFLAGS %{import_path}/cmd/snap-update-ns
+%else
 %gobuild_static -o bin/snap-exec $GOFLAGS %{import_path}/cmd/snap-exec
 %gobuild_static -o bin/snap-update-ns $GOFLAGS %{import_path}/cmd/snap-update-ns
+%endif
 
 # We don't need mvo5 fork for seccomp, as we have seccomp 2.3.x
 sed -e "s:github.com/mvo5/libseccomp-golang:github.com/seccomp/libseccomp-golang:g" -i cmd/snap-seccomp/*.go
