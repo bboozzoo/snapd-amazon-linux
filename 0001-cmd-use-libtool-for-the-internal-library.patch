@@ -1,4 +1,4 @@
-From b4f7ae649bd642e2754373e324749b91f49a040e Mon Sep 17 00:00:00 2001
+From 8cf292e721a287567ff3e8dfd8dca03f3f3c93fb Mon Sep 17 00:00:00 2001
 From: Zygmunt Krynicki <me@zygoon.pl>
 Date: Mon, 6 Mar 2017 20:26:26 +0100
 Subject: [PATCH] cmd: use libtool for the internal library
@@ -14,11 +14,11 @@ Signed-off-by: Zygmunt Krynicki <me@zygoon.pl>
  2 files changed, 10 insertions(+), 9 deletions(-)
 
 diff --git a/cmd/Makefile.am b/cmd/Makefile.am
-index f71a802..c5723be 100644
+index 90ee4b9..7c7dbbb 100644
 --- a/cmd/Makefile.am
 +++ b/cmd/Makefile.am
-@@ -54,12 +54,12 @@ snap-update-ns/snap-update-ns: snap-update-ns/*.go snap-update-ns/*.[ch]
- 	cd snap-update-ns && GOPATH=$(or $(GOPATH),$(realpath $(srcdir)/../../../../..)) go build -i -v
+@@ -58,12 +58,12 @@ snap-seccomp/snap-seccomp: snap-seccomp/*.go
+ 	cd snap-seccomp && GOPATH=$(or $(GOPATH),$(realpath $(srcdir)/../../../../..)) go build -i -v
  
  ##
 -## libsnap-confine-private.a
@@ -30,10 +30,10 @@ index f71a802..c5723be 100644
  
 -libsnap_confine_private_a_SOURCES = \
 +libsnap_confine_private_la_SOURCES = \
+ 	libsnap-confine-private/cgroup-freezer-support.c \
+ 	libsnap-confine-private/cgroup-freezer-support.h \
  	libsnap-confine-private/classic.c \
- 	libsnap-confine-private/classic.h \
- 	libsnap-confine-private/cleanup-funcs.c \
-@@ -132,7 +132,7 @@ noinst_PROGRAMS += decode-mount-opts/decode-mount-opts
+@@ -138,7 +138,7 @@ noinst_PROGRAMS += decode-mount-opts/decode-mount-opts
  
  decode_mount_opts_decode_mount_opts_SOURCES = \
  	decode-mount-opts/decode-mount-opts.c
@@ -42,7 +42,7 @@ index f71a802..c5723be 100644
  decode_mount_opts_decode_mount_opts_STATIC =
  
  if STATIC_LIBCAP
-@@ -186,7 +186,7 @@ snap_confine_snap_confine_SOURCES = \
+@@ -192,7 +192,7 @@ snap_confine_snap_confine_SOURCES = \
  
  snap_confine_snap_confine_CFLAGS = -Wall -Werror $(AM_CFLAGS) -DLIBEXECDIR=\"$(libexecdir)\"
  snap_confine_snap_confine_LDFLAGS = $(AM_LDFLAGS)
@@ -51,7 +51,7 @@ index f71a802..c5723be 100644
  snap_confine_snap_confine_CFLAGS += $(LIBUDEV_CFLAGS)
  snap_confine_snap_confine_LDADD += $(LIBUDEV_LIBS)
  # _STATIC is where we collect statically linked in libraries
-@@ -357,7 +357,7 @@ snap_discard_ns_snap_discard_ns_SOURCES = \
+@@ -364,7 +364,7 @@ snap_discard_ns_snap_discard_ns_SOURCES = \
  	snap-discard-ns/snap-discard-ns.c
  snap_discard_ns_snap_discard_ns_CFLAGS = -Wall -Werror $(AM_CFLAGS)
  snap_discard_ns_snap_discard_ns_LDFLAGS = $(AM_LDFLAGS)
@@ -60,7 +60,7 @@ index f71a802..c5723be 100644
  snap_discard_ns_snap_discard_ns_STATIC =
  
  if APPARMOR
-@@ -398,7 +398,7 @@ system_shutdown_system_shutdown_SOURCES = \
+@@ -405,7 +405,7 @@ system_shutdown_system_shutdown_SOURCES = \
  	system-shutdown/system-shutdown-utils.c \
  	system-shutdown/system-shutdown-utils.h \
  	system-shutdown/system-shutdown.c
@@ -69,7 +69,7 @@ index f71a802..c5723be 100644
  system_shutdown_system_shutdown_CFLAGS = $(filter-out -fPIE -pie,$(CFLAGS)) -static
  system_shutdown_system_shutdown_LDFLAGS = $(filter-out -fPIE -pie,$(LDFLAGS)) -static
  
-@@ -408,7 +408,7 @@ system_shutdown_unit_tests_SOURCES = \
+@@ -415,7 +415,7 @@ system_shutdown_unit_tests_SOURCES = \
  	libsnap-confine-private/unit-tests-main.c \
  	libsnap-confine-private/unit-tests.c \
  	system-shutdown/system-shutdown-utils-test.c
@@ -79,7 +79,7 @@ index f71a802..c5723be 100644
  system_shutdown_unit_tests_LDADD +=  $(GLIB_LIBS)
  endif
 diff --git a/cmd/configure.ac b/cmd/configure.ac
-index f76a39d..1fa02cc 100644
+index f2e6ce6..976e1d0 100644
 --- a/cmd/configure.ac
 +++ b/cmd/configure.ac
 @@ -11,7 +11,8 @@ AC_PROG_CC_C99
@@ -93,5 +93,5 @@ index f76a39d..1fa02cc 100644
  AC_LANG([C])
  # Checks for libraries.
 -- 
-2.13.5
+2.14.3
 
