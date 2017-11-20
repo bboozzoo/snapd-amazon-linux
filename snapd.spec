@@ -66,7 +66,7 @@
 
 Name:           snapd
 Version:        2.29.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -455,6 +455,7 @@ install -d -p %{buildroot}%{_sharedstatedir}/snapd/seccomp/bpf
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/snaps
 install -d -p %{buildroot}%{_sharedstatedir}/snapd/snap/bin
 install -d -p %{buildroot}%{_localstatedir}/snap
+install -d -p %{buildroot}%{_localstatedir}/cache/snapd
 install -d -p %{buildroot}%{_datadir}/polkit-1/actions
 install -d -p %{buildroot}%{_datadir}/selinux/devel/include/contrib
 install -d -p %{buildroot}%{_datadir}/selinux/packages
@@ -479,6 +480,8 @@ install -m 644 -D data/info %{buildroot}%{_libexecdir}/snapd/info
 
 # Install bash completion for "snap"
 install -m 644 -D data/completion/snap %{buildroot}%{_datadir}/bash-completion/completions/snap
+install -m 644 -D data/completion/complete.sh %{buildroot}%{_libexecdir}/snapd
+install -m 644 -D data/completion/etelpmoc.sh %{buildroot}%{_libexecdir}/snapd
 
 # Install snap-confine
 pushd ./cmd
@@ -491,7 +494,7 @@ rm -rfv %{buildroot}%{_sysconfdir}/apparmor.d
 rm -fv %{buildroot}%{_bindir}/ubuntu-core-launcher
 popd
 
-# Install all systemd and dbus units
+# Install all systemd and dbus units, and env files
 pushd ./data
 %make_install SYSTEMDSYSTEMUNITDIR="%{_unitdir}" BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}"
 # Remove snappy core specific units
@@ -579,6 +582,8 @@ popd
 %{_libexecdir}/snapd/snap-mgmt
 %{_mandir}/man1/snap.1*
 %{_datadir}/bash-completion/completions/snap
+%{_libexecdir}/snapd/complete.sh
+%{_libexecdir}/snapd/etelpmoc.sh
 %{_sysconfdir}/profile.d/snapd.sh
 %{_unitdir}/snapd.socket
 %{_unitdir}/snapd.service
@@ -600,6 +605,7 @@ popd
 %dir %{_sharedstatedir}/snapd/snaps
 %dir %{_sharedstatedir}/snapd/snap
 %ghost %dir %{_sharedstatedir}/snapd/snap/bin
+%dir %{_localstatedir}/cache/snapd
 %dir %{_localstatedir}/snap
 %ghost %{_sharedstatedir}/snapd/state.json
 
@@ -685,6 +691,9 @@ fi
 
 
 %changelog
+* Sun Nov 19 2017 Neal Gompa <ngompa13@gmail.com> - 2.29.4-2
+- Add missing bash completion files and cache directory
+
 * Sun Nov 19 2017 Neal Gompa <ngompa13@gmail.com> - 2.29.4-1
 - Release 2.29.4 to Fedora (RH#1508433)
 - Install Polkit configuration (RH#1509586)
