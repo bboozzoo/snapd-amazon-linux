@@ -1,0 +1,39 @@
+From 550ebcd98dad5c9d91419e583a7eecd71a6a52b6 Mon Sep 17 00:00:00 2001
+From: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+Date: Fri, 15 Dec 2017 17:05:50 +0100
+Subject: [PATCH] data/selinux: allow messages from policykit
+
+snapd talks to polkitd over DBus and calls
+org.freedesktop.PolicyKit1.Authority.CheckAuthorization() method. The default
+SELinux policy prevents polkitd from sending a reply back to snapd.
+
+Resolves: https://forum.snapcraft.io/t/selinux-blocking-snapd-since-update-on-fedora-27/3002
+
+Quoting dbus-daemon manual (SELinux section):
+
+  > First, any time a message is routed from one connection to another connection,
+  > the bus daemon will check permissions with the security context of the first
+  > connection as source, security context of the second connection as target,
+  > object class "dbus" and requested permission "send_msg".
+
+The change adds adjusts the policy to allow DBus messages (dbus send_msg) to be
+sent from processes with type polkit_t (polkitd) to processes with type
+snappy_t (snapd).
+
+Signed-off-by: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+---
+ data/selinux/snappy.te | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/data/selinux/snappy.te b/data/selinux/snappy.te
+index 50d58d42d2..262f28890b 100644
+--- a/data/selinux/snappy.te
++++ b/data/selinux/snappy.te
+@@ -215,3 +215,7 @@ corenet_tcp_sendrecv_dns_port(snappy_t)
+ corenet_udp_sendrecv_dns_port(snappy_t)
+ corenet_tcp_connect_dns_port(snappy_t)
+ corenet_sendrecv_dns_client_packets(snappy_t)
++
++# allow polkit to reply to snapd
++gen_require(` type policykit_t; class dbus send_msg; ')
++allow policykit_t snappy_t:dbus send_msg;

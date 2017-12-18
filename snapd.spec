@@ -66,7 +66,7 @@
 
 Name:           snapd
 Version:        2.29.4
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -79,6 +79,8 @@ Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
 
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/4404
+Patch4404:      PR4404-data-selinux--allow-messages-from-policykit.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -691,6 +693,9 @@ fi
 
 
 %changelog
+* Sun Dec 17 2017 Neal Gompa <ngompa13@gmail.com> - 2.29.4-3
+- Add patch to SELinux policy to allow snapd to receive replies from polkit
+
 * Sun Nov 19 2017 Neal Gompa <ngompa13@gmail.com> - 2.29.4-2
 - Add missing bash completion files and cache directory
 
