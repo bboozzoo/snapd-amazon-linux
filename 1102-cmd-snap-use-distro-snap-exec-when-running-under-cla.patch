@@ -1,0 +1,116 @@
+From e5b3564dceaa7108caf7d3720c15568e245af7e5 Mon Sep 17 00:00:00 2001
+From: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+Date: Wed, 3 Jan 2018 08:57:14 +0100
+Subject: [PATCH 1102/1102] cmd/snap: use distro snap-exec when running under
+ classic confinement
+
+We have used a hardcoded path to snap-exec pointing to 'core'
+libexec (/usr/lib/snapd) directory. Subsequently we tried to run snap-exec from
+that location through snap-confine. When classic confinement is in effect,
+snap-confine does not set up a mount namespace where the 'core' snap is a
+rootfs, thus we are running off the distro's root filesystem. In such case, the
+path to snap-exec may or may not be valid, depending on whether the distro's
+libexec directory coincides with the path from 'core'. The assumption would be
+invalid on distributions where libexec is under a different path, eg. Fedora
+where snapd's libexecdir is /usr/libexec/snapd.
+
+Fix the issue by using snap-exec from distro specific libexec directory when
+running under classic confinement. Should 'snap' be reexeced from the 'core'
+snap, use the 'core' snap version of snap-exec too.
+
+Partially addresses: https://bugs.launchpad.net/snapd/+bug/1736939
+
+Signed-off-by: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+---
+ cmd/snap/cmd_run.go      | 19 ++++++++++++++++++-
+ cmd/snap/cmd_run_test.go | 42 +++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 59 insertions(+), 2 deletions(-)
+
+diff --git a/cmd/snap/cmd_run.go b/cmd/snap/cmd_run.go
+index c94de6687..122433019 100644
+--- a/cmd/snap/cmd_run.go
++++ b/cmd/snap/cmd_run.go
+@@ -459,7 +459,24 @@ func runSnapConfine(info *snap.Info, securityTag, snapApp, command, hook string,
+ 		cmd = append(cmd, "--base", info.Base)
+ 	}
+ 	cmd = append(cmd, securityTag)
+-	cmd = append(cmd, filepath.Join(dirs.CoreLibExecDir, "snap-exec"))
++
++	// when under confinement, snap-exec is run from 'core' snap rootfs
++	snapExecPath := filepath.Join(dirs.CoreLibExecDir, "snap-exec")
++
++	if info.NeedsClassic() {
++		// running with classic confinement, carefully pick snap-exec we
++		// are going to use
++		if isReexeced() {
++			// same rule as when choosing the location of snap-confine
++			snapExecPath = filepath.Join(dirs.SnapMountDir, "core/current",
++				dirs.CoreLibExecDir, "snap-exec")
++		} else {
++			// there is no mount namespace where 'core' is the
++			// rootfs, hence we need to use distro's snap-exec
++			snapExecPath = filepath.Join(dirs.DistroLibExecDir, "snap-exec")
++		}
++	}
++	cmd = append(cmd, snapExecPath)
+ 
+ 	if command != "" {
+ 		cmd = append(cmd, "--command="+command)
+diff --git a/cmd/snap/cmd_run_test.go b/cmd/snap/cmd_run_test.go
+index b90308abf..3e61f1c28 100644
+--- a/cmd/snap/cmd_run_test.go
++++ b/cmd/snap/cmd_run_test.go
+@@ -158,9 +158,49 @@ func (s *SnapSuite) TestSnapRunClassicAppIntegration(c *check.C) {
+ 	c.Check(execArgs, check.DeepEquals, []string{
+ 		filepath.Join(dirs.DistroLibExecDir, "snap-confine"), "--classic",
+ 		"snap.snapname.app",
+-		filepath.Join(dirs.CoreLibExecDir, "snap-exec"),
++		filepath.Join(dirs.DistroLibExecDir, "snap-exec"),
+ 		"snapname.app", "--arg1", "arg2"})
+ 	c.Check(execEnv, testutil.Contains, "SNAP_REVISION=x2")
++
++}
++
++func (s *SnapSuite) TestSnapRunClassicAppIntegrationReexeced(c *check.C) {
++	mountedCorePath := filepath.Join(dirs.SnapMountDir, "core/current")
++	mountedCoreLibExecPath := filepath.Join(mountedCorePath, dirs.CoreLibExecDir)
++
++	defer mockSnapConfine(mountedCoreLibExecPath)()
++
++	// mock installed snap
++	si := snaptest.MockSnap(c, string(mockYaml)+"confinement: classic\n", string(mockContents), &snap.SideInfo{
++		Revision: snap.R("x2"),
++	})
++	err := os.Symlink(si.MountDir(), filepath.Join(si.MountDir(), "../current"))
++	c.Assert(err, check.IsNil)
++
++	restore := snaprun.MockOsReadlink(func(name string) (string, error) {
++		// pretend 'snap' is reexeced from 'core'
++		return filepath.Join(mountedCorePath, "usr/bin/snap"), nil
++	})
++	defer restore()
++
++	execArg0 := ""
++	execArgs := []string{}
++	execEnv := []string{}
++	restorer := snaprun.MockSyscallExec(func(arg0 string, args []string, envv []string) error {
++		execArg0 = arg0
++		execArgs = args
++		execEnv = envv
++		return nil
++	})
++	defer restorer()
++	rest, err := snaprun.Parser().ParseArgs([]string{"run", "snapname.app", "--arg1", "arg2"})
++	c.Assert(err, check.IsNil)
++	c.Assert(rest, check.DeepEquals, []string{"snapname.app", "--arg1", "arg2"})
++	c.Check(execArgs, check.DeepEquals, []string{
++		filepath.Join(mountedCoreLibExecPath, "snap-confine"), "--classic",
++		"snap.snapname.app",
++		filepath.Join(mountedCoreLibExecPath, "snap-exec"),
++		"snapname.app", "--arg1", "arg2"})
+ }
+ 
+ func (s *SnapSuite) TestSnapRunAppWithCommandIntegration(c *check.C) {
+-- 
+2.14.3
+

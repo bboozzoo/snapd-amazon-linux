@@ -1,0 +1,40 @@
+From fbfee0ea2b7c43de58b2091ee231cc988a9ef925 Mon Sep 17 00:00:00 2001
+From: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+Date: Tue, 16 Jan 2018 13:42:42 +0100
+Subject: [PATCH 1101/1102] dirs: check if distro 'is like' fedora when picking
+ path to libexecdir
+
+The original bug report [1] comes from Korora, a Fedora derivative. Address it
+by checking if distro 'is like' fedora rather than using a hardcoded list of
+options. Both RHEL and CentOS list ID_LIKE="..fedora.." in their /etc/os-release
+files. Korora, being a derivative also has ID_LIKE="fedora".
+
+[1]. https://bugs.launchpad.net/snappy/+bug/1743301
+
+Signed-off-by: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+---
+ dirs/dirs.go | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/dirs/dirs.go b/dirs/dirs.go
+index 1d0175eea..5db1174de 100644
+--- a/dirs/dirs.go
++++ b/dirs/dirs.go
+@@ -228,10 +228,11 @@ func SetRootDir(rootdir string) {
+ 	LocaleDir = filepath.Join(rootdir, "/usr/share/locale")
+ 	ClassicDir = filepath.Join(rootdir, "/writable/classic")
+ 
+-	switch release.ReleaseInfo.ID {
+-	case "fedora", "centos", "rhel":
++	if release.DistroLike("fedora") {
++		// rhel, centos, fedora and derivatives
++		// both rhel and centos list "fedora" in ID_LIKE
+ 		DistroLibExecDir = filepath.Join(rootdir, "/usr/libexec/snapd")
+-	default:
++	} else {
+ 		DistroLibExecDir = filepath.Join(rootdir, "/usr/lib/snapd")
+ 	}
+ 
+-- 
+2.14.3
+

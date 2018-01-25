@@ -1,0 +1,26 @@
+From bbb4e664b54d078fc76537ed954128a7bf9d34a8 Mon Sep 17 00:00:00 2001
+From: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+Date: Mon, 18 Dec 2017 07:19:28 +0100
+Subject: [PATCH 1002/1003] data/selinux: bump policy version to 0.0.13
+
+Signed-off-by: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+---
+ data/selinux/snappy.te | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/data/selinux/snappy.te b/data/selinux/snappy.te
+index 262f28890..3370fb394 100644
+--- a/data/selinux/snappy.te
++++ b/data/selinux/snappy.te
+@@ -17,7 +17,7 @@
+ # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ 
+ 
+-policy_module(snappy,0.0.12)
++policy_module(snappy,0.0.13)
+ 
+ ########################################
+ #
+-- 
+2.14.3
+
