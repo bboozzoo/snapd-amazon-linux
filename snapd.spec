@@ -66,7 +66,7 @@
 
 Name:           snapd
 Version:        2.30
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -704,6 +704,9 @@ fi
 
 
 %changelog
+* Fri Feb 09 2018 Fedora Release Engineering <releng@fedoraproject.org> - 2.30-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_28_Mass_Rebuild
+
 * Thu Jan 25 2018 Neal Gompa <ngompa13@gmail.com> - 2.30-1
 - Release 2.30 to Fedora (RH#1527519)
 - Backport fix to correctly locate snapd libexecdir on Fedora derivatives (RH#1536895)
