@@ -71,7 +71,7 @@
 
 Name:           snapd
 Version:        2.31.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -216,13 +216,14 @@ BuildArch:     noarch
 %endif
 
 %if ! 0%{?with_bundled}
+Requires:      golang(github.com/boltdb/bolt)
 Requires:      golang(github.com/cheggaaa/pb)
 Requires:      golang(github.com/coreos/go-systemd/activation)
 Requires:      golang(github.com/godbus/dbus)
 Requires:      golang(github.com/godbus/dbus/introspect)
 Requires:      golang(github.com/gorilla/mux)
 Requires:      golang(github.com/jessevdk/go-flags)
-Requires:      golang(github.com/mvo5/uboot-go/uenv)
+Requires:      golang(github.com/mvo5/goconfigparser)
 Requires:      golang(github.com/ojii/gettext.go)
 Requires:      golang(github.com/seccomp/libseccomp-golang)
 Requires:      golang(golang.org/x/crypto/openpgp/armor)
@@ -241,7 +242,7 @@ Requires:      golang(gopkg.in/yaml.v2)
 # These Provides are unversioned because the sources in
 # the bundled tarball are unversioned (they go by git commit)
 # *sigh*... I hate golang...
-Provides:      bundled(golang(github.com/boltdb/bolt))
+Provides:      bundled(golang(github.com/snapcore/bolt))
 Provides:      bundled(golang(github.com/cheggaaa/pb))
 Provides:      bundled(golang(github.com/coreos/go-systemd/activation))
 Provides:      bundled(golang(github.com/godbus/dbus))
@@ -722,6 +723,9 @@ fi
 
 
 %changelog
+* Mon Mar 05 2018 Neal Gompa <ngompa13@gmail.com> - 2.31.1-2
+- Fix dependencies for devel subpackage
+
 * Sun Mar 04 2018 Neal Gompa <ngompa13@gmail.com> - 2.31.1-1
 - Release 2.31.1 to Fedora (RH#1542483)
 - Drop all backported patches as they're part of this release
