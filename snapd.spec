@@ -722,7 +722,7 @@ fi
 
 
 %changelog
-* Thu Feb 22 2018 Neal Gompa <ngompa13@gmail.com> - 2.31.1-1
+* Sun Mar 04 2018 Neal Gompa <ngompa13@gmail.com> - 2.31.1-1
 - Release 2.31.1 to Fedora (RH#1542483)
 - Drop all backported patches as they're part of this release
 
