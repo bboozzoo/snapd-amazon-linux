@@ -1,4 +1,4 @@
-From 8d2149e1f75cb3352fd89ca5466283af67054cb7 Mon Sep 17 00:00:00 2001
+From 66a7e479f86336a1df9d06ad13e818dbc38191b3 Mon Sep 17 00:00:00 2001
 From: Zygmunt Krynicki <me@zygoon.pl>
 Date: Mon, 6 Mar 2017 20:26:26 +0100
 Subject: [PATCH] cmd: use libtool for the internal library
@@ -9,12 +9,12 @@ otherwise.
 
 Signed-off-by: Zygmunt Krynicki <me@zygoon.pl>
 ---
- cmd/Makefile.am  | 26 +++++++++++++-------------
+ cmd/Makefile.am  | 30 +++++++++++++++---------------
  cmd/configure.ac |  3 ++-
- 2 files changed, 15 insertions(+), 14 deletions(-)
+ 2 files changed, 17 insertions(+), 16 deletions(-)
 
 diff --git a/cmd/Makefile.am b/cmd/Makefile.am
-index 8bb371e..b6b13d0 100644
+index 371d81273..f88c84041 100644
 --- a/cmd/Makefile.am
 +++ b/cmd/Makefile.am
 @@ -68,12 +68,12 @@ snap-seccomp/snap-seccomp: snap-seccomp/*.go
@@ -103,8 +103,23 @@ index 8bb371e..b6b13d0 100644
  system_shutdown_unit_tests_CFLAGS = $(GLIB_CFLAGS)
  system_shutdown_unit_tests_LDADD +=  $(GLIB_LIBS)
  endif
+@@ -453,7 +453,7 @@ libexec_PROGRAMS += snap-gdb-shim/snap-gdb-shim
+ snap_gdb_shim_snap_gdb_shim_SOURCES = \
+ 	snap-gdb-shim/snap-gdb-shim.c
+ 
+-snap_gdb_shim_snap_gdb_shim_LDADD = libsnap-confine-private.a
++snap_gdb_shim_snap_gdb_shim_LDADD = libsnap-confine-private.la
+ 
+ ##
+ ## snapd-generator
+@@ -462,4 +462,4 @@ snap_gdb_shim_snap_gdb_shim_LDADD = libsnap-confine-private.a
+ libexec_PROGRAMS += snapd-generator/snapd-generator
+ 
+ snapd_generator_snapd_generator_SOURCES = snapd-generator/main.c
+-snapd_generator_snapd_generator_LDADD = libsnap-confine-private.a
++snapd_generator_snapd_generator_LDADD = libsnap-confine-private.la
 diff --git a/cmd/configure.ac b/cmd/configure.ac
-index 74f7474..b21b33d 100644
+index 14c0e92d1..92eb496ad 100644
 --- a/cmd/configure.ac
 +++ b/cmd/configure.ac
 @@ -11,7 +11,8 @@ AC_PROG_CC_C99
