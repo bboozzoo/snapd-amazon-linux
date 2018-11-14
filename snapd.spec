@@ -76,7 +76,7 @@
 
 Name:           snapd
 Version:        2.36
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -201,7 +201,11 @@ BuildArch:      noarch
 BuildRequires:  selinux-policy, selinux-policy-devel
 Requires(post): selinux-policy-base >= %{_selinux_policy_version}
 Requires(post): policycoreutils
+%if 0%{?rhel} == 7
+Requires(post): policycoreutils-python
+%else
 Requires(post): policycoreutils-python-utils
+%endif
 Requires(pre):  libselinux-utils
 Requires(post): libselinux-utils
 
@@ -763,6 +767,9 @@ fi
 
 
 %changelog
+* Wed Nov 14 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-2
+- Fix runtime dependency for selinux subpackage for EL7
+
 * Sun Nov 04 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-1
 - Release 2.36 to Fedora
 
