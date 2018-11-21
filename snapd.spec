@@ -76,7 +76,7 @@
 
 Name:           snapd
 Version:        2.36
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -86,6 +86,10 @@ Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
+
+# Upstream proposed PR: https://github.com/snapcore/snapd/pull/6183
+# Merged upstream, remove when rebasing to 2.37
+Patch0101:      PR6183-Add-CentOS-7-support.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -767,6 +771,9 @@ fi
 
 
 %changelog
+* Wed Nov 21 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-3
+- Backport fixes for EL7 support
+
 * Wed Nov 14 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-2
 - Fix runtime dependency for selinux subpackage for EL7
 
