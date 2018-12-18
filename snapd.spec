@@ -75,8 +75,8 @@
 %{!?__systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.36
-Release:        3%{?dist}
+Version:        2.36.3
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 Group:          System Environment/Base
 License:        GPLv3
@@ -86,10 +86,6 @@ Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
-
-# Upstream proposed PR: https://github.com/snapcore/snapd/pull/6183
-# Merged upstream, remove when rebasing to 2.37
-Patch0101:      PR6183-Add-CentOS-7-support.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -563,12 +559,19 @@ pushd ./data
               SYSTEMDSYSTEMUNITDIR="%{_unitdir}" \
               SNAP_MOUNT_DIR="%{_sharedstatedir}/snapd/snap" \
               SNAPD_ENVIRONMENT_FILE="%{_sysconfdir}/sysconfig/snapd"
+popd
+
+
+%if 0%{?rhel} == 7
+# Install kernel tweaks
+# See: https://access.redhat.com/articles/3128691
+install -m 644 -D data/sysctl/rhel7-snap.conf %{buildroot}%{_sysctldir}/99-snap.conf
+%endif
 
 # Remove snappy core specific units
 rm -fv %{buildroot}%{_unitdir}/snapd.system-shutdown.service
 rm -fv %{buildroot}%{_unitdir}/snapd.snap-repair.*
 rm -fv %{buildroot}%{_unitdir}/snapd.core-fixup.*
-popd
 
 # Remove snappy core specific scripts
 rm %{buildroot}%{_libexecdir}/snapd/snapd.core-fixup.sh
@@ -645,6 +648,9 @@ popd
 %{_bindir}/snap
 %{_bindir}/snapctl
 %{_environmentdir}/990-snapd.conf
+%if 0%{?rhel} == 7
+%{_sysctldir}/99-snap.conf
+%endif
 %dir %{_libexecdir}/snapd
 %{_libexecdir}/snapd/snapctl
 %{_libexecdir}/snapd/snapd
@@ -730,6 +736,9 @@ popd
 %endif
 
 %post
+%if 0%{?rhel} == 7
+%sysctl_apply 99-snap.conf
+%endif
 %systemd_post %{snappy_svcs}
 # If install, test if snapd socket and timer are enabled.
 # If enabled, then attempt to start them. This will silently fail
@@ -771,11 +780,77 @@ fi
 
 
 %changelog
+* Tue Dec 18 2018 Neal Gompa <ngompa13@gmail.com> - 2.36.3-1
+- Release 2.36.3 to Fedora
+- Remove merged patch
+
+* Fri Dec 14 2018 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.36.3
+ - wrappers: use new systemd.IsActive in core18 early boot
+ - httputil: retry on temporary net errors
+ - wrappers: only restart service in core18 when they are active
+ - systemd: start snapd.autoimport.service in --no-block mode
+ - data/selinux: fix syntax error in definition of snappy_admin
+   interfacewhen installing selinux-policy-devel package.
+ - centos: enable SELinux support on CentOS 7
+ - cmd, dirs, interfaces/apparmor: update distro identification to
+   support ID="archlinux"
+ - apparmor: allow hard link to snap-specific semaphore files
+ - overlord,apparmor: new syskey behaviour + non-ignored snap-confine
+   profile errors
+ - snap: add new `snap run --trace-exec` call
+ - interfaces/backends: detect too old apparmor_parser
+
+* Thu Nov 29 2018 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.36.2
+ - daemon, vendor: bump github.com/coreos/go-systemd/activation,
+   handle API changes
+ - snapstate: update fontconfig caches on install
+ - overlord,daemon: mock security backends for testing
+ - sanity, spread, tests: add CentOS
+ - Revert "cmd/snap, tests/main/snap-info: highlight the current
+   channel"
+ - cmd/snap: add nanosleep to blacklisted syscalls when running with
+   --strace
+ - tests: add regression test for LP: #1803535
+ - snap-update-ns: fix trailing slash bug on trespassing error
+ - interfaces/builtin/opengl: allow reading /etc/OpenCL/vendors
+ - cmd/snap-confine: nvidia: pick up libnvidia-opencl.so
+ - interfaces/opengl: add additional accesses for cuda
+
+* Wed Nov 21 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-4
+- Fix backport patch
+
 * Wed Nov 21 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-3
 - Backport fixes for EL7 support
 
 * Wed Nov 14 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-2
 - Fix runtime dependency for selinux subpackage for EL7
+
+* Fri Nov 09 2018 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.36.1
+ - tests,snap-confine: add core18 only hooks test and fix running
+   core18 only hooks on classic
+ - interfaces/apparmor: allow access to
+   /run/snap.$SNAP_INSTANCE_NAME
+ - spread.yaml: add more systems to the autopkgtest and qemu backends
+ - daemon: spool sideloaded snap into blob dir
+ - wrappers: fix generating of service units with multiple `before`
+   dependencies
+ - data: run snapd.autoimport.service only after seeding
+ - tests,store,daemon: ensure proxy settings are honored in
+   auth/userinfo too
+ - packaging/fedora: Merge changes from Fedora Dist-Git
+ - tests/lib: adjust to changed systemctl behaviour on debian-9
+ - tests/main/interfces-accounts-service: switch to busctl, more
+   debugging
+ - store: also make snaps downloaded via deltas 0600
+ - cmd/snap-exec: don't fail on some try mode snaps
+ - cmd/snap, userd, testutil: tweak DBus tests to use private session
+   bus connection
+ - tests/main: fixes for the new shellcheck
+ - cmd/snap-confine: remove stale mount profile along stale namespace
+ - data/apt: close stderr when calling snap in the apt install hook
 
 * Sun Nov 04 2018 Neal Gompa <ngompa13@gmail.com> - 2.36-1
 - Release 2.36 to Fedora
