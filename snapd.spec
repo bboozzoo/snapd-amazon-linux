@@ -86,6 +86,9 @@ Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
 
+# Workaround for MongoDB removal: https://fedoraproject.org/wiki/Changes/MongoDB_Removal
+Patch1001:      1001-errtracker-neuter-error-tracker.patch
+
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
 ExclusiveArch:  %{?go_arches:%{go_arches}}%{!?go_arches:%{ix86} x86_64 %{arm}}
@@ -146,7 +149,8 @@ BuildRequires: golang(golang.org/x/net/context)
 BuildRequires: golang(golang.org/x/net/context/ctxhttp)
 BuildRequires: golang(gopkg.in/check.v1)
 BuildRequires: golang(gopkg.in/macaroon.v1)
-BuildRequires: golang(gopkg.in/mgo.v2/bson)
+# FIXME: Address when Patch1001 is addressed
+#BuildRequires: golang(gopkg.in/mgo.v2/bson)
 BuildRequires: golang(gopkg.in/retry.v1)
 BuildRequires: golang(gopkg.in/tomb.v2)
 BuildRequires: golang(gopkg.in/yaml.v2)
@@ -241,7 +245,8 @@ Requires:      golang(golang.org/x/net/context)
 Requires:      golang(golang.org/x/net/context/ctxhttp)
 Requires:      golang(gopkg.in/check.v1)
 Requires:      golang(gopkg.in/macaroon.v1)
-Requires:      golang(gopkg.in/mgo.v2/bson)
+# FIXME: Address when Patch1001 is addressed
+#Requires:      golang(gopkg.in/mgo.v2/bson)
 Requires:      golang(gopkg.in/retry.v1)
 Requires:      golang(gopkg.in/tomb.v2)
 Requires:      golang(gopkg.in/yaml.v2)
