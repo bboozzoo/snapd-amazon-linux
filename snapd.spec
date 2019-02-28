@@ -75,7 +75,7 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.37.3
+Version:        2.37.4
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
@@ -790,6 +790,16 @@ fi
 
 
 %changelog
+* Thu Feb 28 2019 Zygmunt Bazyli Krynicki <me@zygoon.pl> - 2.37.4-1
+- Release 2.37.4 to Fedora (RH#1683795)
+ - squashfs: unset SOURCE_DATE_EPOCH in the TestBuildDate test
+ - overlord/ifacestate: fix migration of connections on upgrade from ubuntu-core
+ - tests: fix upgrade-from-2.15 with kernel 4.15
+ - interfaces/seccomp: increase filter precision
+ - tests: remove snapweb from tests
+- Fix RPM macro in changelog (rpmlint)
+- Fix non-break space in changelog (rpmlint)
+
 * Tue Feb 19 2019 Zygmunt Bazyli Krynicki <me@zygoon.pl> - 2.37.3-1
 - Release 2.37.3 to Fedora (RH#1678603)
 
@@ -1030,7 +1040,7 @@ fi
  - daemon, vendor: bump github.com/coreos/go-systemd/activation,
    handle API changes
  - Revert "cmd/snap-confine: don't allow mapping lib{uuid,blkid}"
- - packaging/fedora: use %_sysctldir macro
+ - packaging/fedora: use %%_sysctldir macro
  - cmd/snap-confine: remove unneeded unshare
  - sanity: extend the kernel version check to cover CentOS/RHEL
    kernels
@@ -2224,7 +2234,7 @@ fi
    during tests execution
  - interfaces/apparmor: use helper to load stray profile
  - tests: ubuntu core abstraction
- - overlord/snapstate: don't panic in a corner case interaction of
+ - overlord/snapstate: don't panic in a corner case interaction of
    cleanup tasks and pruning
  - interfaces/apparmor: add 'mediate_deleted' profile flag for all
    snaps
