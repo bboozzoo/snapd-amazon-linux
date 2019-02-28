@@ -76,7 +76,7 @@
 
 Name:           snapd
 Version:        2.37.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -790,15 +790,22 @@ fi
 
 
 %changelog
+* Thu Feb 28 2019 Neal Gompa <ngompa13@gmail.com> - 2.37.4-2
+- Fix accidentally corrupted changelog merge
+
 * Thu Feb 28 2019 Zygmunt Bazyli Krynicki <me@zygoon.pl> - 2.37.4-1
 - Release 2.37.4 to Fedora (RH#1683795)
+- Fix RPM macro in changelog (rpmlint)
+- Fix non-break space in changelog (rpmlint)
+
+* Wed Feb 27 2019 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.37.4
  - squashfs: unset SOURCE_DATE_EPOCH in the TestBuildDate test
- - overlord/ifacestate: fix migration of connections on upgrade from ubuntu-core
+ - overlord/ifacestate: fix migration of connections on upgrade from
+   ubuntu-core
  - tests: fix upgrade-from-2.15 with kernel 4.15
  - interfaces/seccomp: increase filter precision
  - tests: remove snapweb from tests
-- Fix RPM macro in changelog (rpmlint)
-- Fix non-break space in changelog (rpmlint)
 
 * Tue Feb 19 2019 Zygmunt Bazyli Krynicki <me@zygoon.pl> - 2.37.3-1
 - Release 2.37.3 to Fedora (RH#1678603)
