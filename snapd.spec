@@ -76,7 +76,7 @@
 
 Name:           snapd
 Version:        2.38
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -117,6 +117,14 @@ Requires:       bash-completion
 
 # Force the SELinux module to be installed
 Requires:       %{name}-selinux = %{version}-%{release}
+
+%if 0%{?fedora} && 0%{?fedora} < 30
+# snapd-login-service is no more
+# Note: Remove when F29 is EOL
+Obsoletes:      %{name}-login-service < 1.33
+Provides:       %{name}-login-service = 1.33
+Provides:       %{name}-login-service%{?_isa} = 1.33
+%endif
 
 %if ! 0%{?with_bundled}
 BuildRequires: golang(github.com/boltdb/bolt)
@@ -774,6 +782,9 @@ fi
 
 
 %changelog
+* Fri Apr 05 2019 Neal Gompa <ngompa13@gmail.com> - 2.38-2
+- Readd snapd-login-service Provides for gnome-software for F29 and older
+
 * Thu Mar 21 2019 Neal Gompa <ngompa13@gmail.com> - 2.38-1
 - Release 2.38 to Fedora (RH#1691296)
 - Switch to officially released main source tarball
