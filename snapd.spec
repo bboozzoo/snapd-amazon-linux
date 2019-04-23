@@ -76,7 +76,7 @@
 
 Name:           snapd
 Version:        2.38
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -782,6 +782,9 @@ fi
 
 
 %changelog
+* Tue Apr 23 20:25:38 CET 2019 Robert-André Mauchin <zebob.m@gmail.com> - 2.38-3
+- Rebuilt for fix in golang-github-seccomp-libseccomp-golang
+
 * Fri Apr 05 2019 Neal Gompa <ngompa13@gmail.com> - 2.38-2
 - Readd snapd-login-service Provides for gnome-software for F29 and older
 
@@ -4230,7 +4233,7 @@ fi
  - cmd: fix mustUnsetenv docstring (thanks to Chipaca)
  - release: remove default from VERSION_ID
  - tests: enable regression, upgrade and completion test suites for
-   fedora 
+   fedora
  - tests: restore interfaces-account-control properly
  - overlord/devicestate, store: update device auth endpoints URLs
  - tests: fix install-hook test failure
