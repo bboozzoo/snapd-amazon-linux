@@ -69,6 +69,9 @@
 %define gotest() go test -compiler gc -ldflags "${LDFLAGS:-}" %{?**};
 %endif
 
+# Avoid causing incompatibilities among base snaps
+%global __brp_mangle_shebangs_exclude ^/bin/(bash|sh)$
+
 # Compat path macros
 %{!?_environmentdir: %global _environmentdir %{_prefix}/lib/environment.d}
 %{!?_systemdgeneratordir: %global _systemdgeneratordir %{_prefix}/lib/systemd/system-generators}
@@ -819,6 +822,7 @@ fi
 - Release 2.39 to Fedora (RH#1699087)
 - Enable basic SELinux integration
 - Fix changelog entry to fix build for EPEL 7
+- Exclude bash and POSIX sh shebangs from mangling (LP:1824158)
 
 * Fri May 03 2019 Michael Vogt <mvo@ubuntu.com>
 - New upstream release 2.39
