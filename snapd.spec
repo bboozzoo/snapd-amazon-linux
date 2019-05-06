@@ -75,8 +75,8 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.38
-Release:        3%{?dist}
+Version:        2.39
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -169,6 +169,7 @@ BuildRequires:  indent
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(libcap)
 BuildRequires:  pkgconfig(libseccomp)
+BuildRequires:  pkgconfig(libselinux)
 BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(systemd)
 BuildRequires:  pkgconfig(udev)
@@ -283,12 +284,20 @@ Provides:      golang(%{import_path}/asserts/sysdb) = %{version}-%{release}
 Provides:      golang(%{import_path}/asserts/systestkeys) = %{version}-%{release}
 Provides:      golang(%{import_path}/boot) = %{version}-%{release}
 Provides:      golang(%{import_path}/boot/boottest) = %{version}-%{release}
+Provides:      golang(%{import_path}/bootloader) = %{version}-%{release}
+Provides:      golang(%{import_path}/bootloader/androidbootenv) = %{version}-%{release}
+Provides:      golang(%{import_path}/bootloader/grubenv) = %{version}-%{release}
+Provides:      golang(%{import_path}/bootloader/ubootenv) = %{version}-%{release}
 Provides:      golang(%{import_path}/client) = %{version}-%{release}
 Provides:      golang(%{import_path}/cmd) = %{version}-%{release}
+Provides:      golang(%{import_path}/cmd/cmdutil) = %{version}-%{release}
+Provides:      golang(%{import_path}/cmd/snap-seccomp/syscalls) = %{version}-%{release}
+Provides:      golang(%{import_path}/cmd/snaplock) = %{version}-%{release}
 Provides:      golang(%{import_path}/daemon) = %{version}-%{release}
 Provides:      golang(%{import_path}/dirs) = %{version}-%{release}
 Provides:      golang(%{import_path}/errtracker) = %{version}-%{release}
 Provides:      golang(%{import_path}/features) = %{version}-%{release}
+Provides:      golang(%{import_path}/gadget) = %{version}-%{release}
 Provides:      golang(%{import_path}/httputil) = %{version}-%{release}
 Provides:      golang(%{import_path}/i18n) = %{version}-%{release}
 Provides:      golang(%{import_path}/image) = %{version}-%{release}
@@ -309,6 +318,7 @@ Provides:      golang(%{import_path}/interfaces/utils) = %{version}-%{release}
 Provides:      golang(%{import_path}/jsonutil) = %{version}-%{release}
 Provides:      golang(%{import_path}/jsonutil/safejson) = %{version}-%{release}
 Provides:      golang(%{import_path}/logger) = %{version}-%{release}
+Provides:      golang(%{import_path}/metautil) = %{version}-%{release}
 Provides:      golang(%{import_path}/netutil) = %{version}-%{release}
 Provides:      golang(%{import_path}/osutil) = %{version}-%{release}
 Provides:      golang(%{import_path}/osutil/squashfs) = %{version}-%{release}
@@ -326,6 +336,7 @@ Provides:      golang(%{import_path}/overlord/configstate/configcore) = %{versio
 Provides:      golang(%{import_path}/overlord/configstate/proxyconf) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/configstate/settings) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/devicestate) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/devicestate/devicestatetest) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/hookstate) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/hookstate/ctlcmd) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/hookstate/hooktest) = %{version}-%{release}
@@ -340,14 +351,12 @@ Provides:      golang(%{import_path}/overlord/snapstate) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/snapstate/backend) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/standby) = %{version}-%{release}
 Provides:      golang(%{import_path}/overlord/state) = %{version}-%{release}
-Provides:      golang(%{import_path}/partition) = %{version}-%{release}
-Provides:      golang(%{import_path}/partition/androidbootenv) = %{version}-%{release}
-Provides:      golang(%{import_path}/partition/grubenv) = %{version}-%{release}
-Provides:      golang(%{import_path}/partition/ubootenv) = %{version}-%{release}
+Provides:      golang(%{import_path}/overlord/storecontext) = %{version}-%{release}
 Provides:      golang(%{import_path}/polkit) = %{version}-%{release}
 Provides:      golang(%{import_path}/progress) = %{version}-%{release}
 Provides:      golang(%{import_path}/progress/progresstest) = %{version}-%{release}
 Provides:      golang(%{import_path}/release) = %{version}-%{release}
+Provides:      golang(%{import_path}/sandbox/seccomp) = %{version}-%{release}
 Provides:      golang(%{import_path}/sanity) = %{version}-%{release}
 Provides:      golang(%{import_path}/selinux) = %{version}-%{release}
 Provides:      golang(%{import_path}/snap) = %{version}-%{release}
@@ -369,6 +378,7 @@ Provides:      golang(%{import_path}/tests/lib/fakestore/store) = %{version}-%{r
 Provides:      golang(%{import_path}/testutil) = %{version}-%{release}
 Provides:      golang(%{import_path}/timeout) = %{version}-%{release}
 Provides:      golang(%{import_path}/timeutil) = %{version}-%{release}
+Provides:      golang(%{import_path}/timings) = %{version}-%{release}
 Provides:      golang(%{import_path}/userd) = %{version}-%{release}
 Provides:      golang(%{import_path}/userd/ui) = %{version}-%{release}
 Provides:      golang(%{import_path}/wrappers) = %{version}-%{release}
@@ -465,10 +475,10 @@ popd
 # Build snap-confine
 pushd ./cmd
 autoreconf --force --install --verbose
-# selinux support is not yet available, for now just disable apparmor
 # FIXME: add --enable-caps-over-setuid as soon as possible (setuid discouraged!)
 %configure \
     --disable-apparmor \
+    --enable-selinux \
     --libexecdir=%{_libexecdir}/snapd/ \
     --enable-nvidia-biarch \
     %{?with_multilib:--with-32bit-libdir=%{_prefix}/lib} \
@@ -544,7 +554,7 @@ install -m 644 -D data/completion/etelpmoc.sh %{buildroot}%{_libexecdir}/snapd
 # Install snap-confine
 pushd ./cmd
 %make_install
-# Undo the 0000 permissions, they are restored in the files section
+# Undo the 0111 permissions, they are restored in the files section
 chmod 0755 %{buildroot}%{_sharedstatedir}/snapd/void
 # We don't use AppArmor
 rm -rfv %{buildroot}%{_sysconfdir}/apparmor.d
@@ -657,6 +667,7 @@ popd
 %{_libexecdir}/snapd/snap-failure
 %{_libexecdir}/snapd/info
 %{_libexecdir}/snapd/snap-mgmt
+%{_libexecdir}/snapd/snap-mgmt-selinux
 %{_mandir}/man8/snap.8*
 %{_datadir}/applications/snap-handle-link.desktop
 %{_datadir}/bash-completion/completions/snap
@@ -715,7 +726,7 @@ popd
 %{_mandir}/man8/snap-confine.8*
 %{_mandir}/man8/snap-discard-ns.8*
 %{_systemdgeneratordir}/snapd-generator
-%attr(0000,root,root) %{_sharedstatedir}/snapd/void
+%attr(0111,root,root) %{_sharedstatedir}/snapd/void
 
 
 %files selinux
@@ -764,6 +775,28 @@ fi
 %postun
 %systemd_postun_with_restart %{snappy_svcs}
 
+%triggerun -- snapd < 2.39
+# TODO: the trigger relies on a very specific snapd version that introduced SELinux
+# mount context, figure out how to update the trigger condition to run when needed
+
+# Trigger on uninstall, with one version of the package being pre 2.38 see
+# https://rpm-packaging-guide.github.io/#triggers-and-scriptlets for details
+# when triggers are run
+if [ "$1" -eq 2 -a "$2" -eq 1 ]; then
+   # Upgrade from pre 2.38 version
+   %{_libexecdir}/snapd/snap-mgmt-selinux --patch-selinux-mount-context=system_u:object_r:snappy_snap_t:s0 || :
+
+   # snapd might have created fontconfig cache directory earlier, but with
+   # incorrect context due to bugs in the policy, make sure it gets the right one
+   # on upgrade when the new policy was introduced
+   if [ -d "%{_localstatedir}/cache/fontconfig" ]; then
+      restorecon -R %{_localstatedir}/cache/fontconfig || :
+   fi
+elif [ "$1" -eq 1 -a "$2" -eq 2 ]; then
+   # Downgrade to a pre 2.38 version
+   %{_libexecdir}/snapd/snap-mgmt-selinux --remove-selinux-mount-context=system_u:object_r:snappy_snap_t:s0 || :
+fi
+
 %pre selinux
 %selinux_relabel_pre
 
@@ -782,7 +815,187 @@ fi
 
 
 %changelog
-* Tue Apr 23 20:25:38 CET 2019 Robert-André Mauchin <zebob.m@gmail.com> - 2.38-3
+* Mon May 06 2019 Neal Gompa <ngompa13@gmail.com> - 2.39-1
+- Release 2.39 to Fedora (RH#1699087)
+- Enable basic SELinux integration
+- Fix changelog entry to fix build for EPEL 7
+
+* Fri May 03 2019 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.39
+ - overlord/ifacestate: update static attributes of "content"
+   interface
+ - data/selinux: tweak the policy for runuser and s-c, interpret
+   audit entries
+ - snapshotstate: disable automatic snapshots on core for now
+ - overlord/corecfg: make expiration of automatic snapshots
+   configurable
+ - snapstate: auto-install snapd when needed
+ - interfaces: add support for the snapd snap in the dbus backend
+ - overlord/snapstate: tweak autorefresh logic if network is not
+   available
+ - interfaces/apparmor: allow running /usr/bin/od
+ - osutil,cmdutil: move CommandFromCore and make it use the snapd
+   snap (if available)
+ - daemon: also verify snap instructions for multi-snap requests
+ - data/selinux: allow snap-confine to mount on top of bin
+ - data/selinux: auto transition /var/snap to snappy_var_t
+ - cmd: add `snap debug validate-seed <path>` cmd
+ - interfaces/builtin/desktop: fonconfig v6/v7 cache handling on
+   Fedora
+ - interfaces/builtin/intel_mei: fix /dev/mei* AppArmor pattern
+ - tests: make snap-connections test work on boards with snaps pre-
+   installed
+ - tests: check for /snap/core16/current in core16-provided-by-core
+ - tests: run livepatch test on 18.04 as well
+ - devicestate: deal correctly with the "required" flag on Remodel
+ - snapstate,state: add TaskSet.AddAllWithEdges() and use in doUpdate
+ - snapstate: add new NoReRefresh flag and use in Remodel()
+ - many: allow core as a fallback for core16
+ - snapcraft: build static fontconfig in the snapd snap
+ - cmd/snap-confine: remove unused sc_open_snap_{update,discard}_ns
+ - data/selinux: allow snapd to execute runuser under snappy_t
+ - spread, tests: do not leave mislabeled files in restorecon test,
+   attempt to catch similar files
+ - interfaces: cleanup internal tool lookup in system-key
+ - many: move auth.AuthContext to store.DeviceAndAuthContext, the
+   implemention to a separate storecontext packageThis:
+ - overlord/devicestate: measurements around ensure and related tasks
+ - cmd: tweak internal tool lookup to accept more possible locations
+ - overlord/snapstate,snapshotstate: create snapshot on snap removal
+ - tests: run smoke tests on (almost) pristine systems
+ - tests: system disable ssh for config defaults in gadget
+ - cmd/debug: integrate new task timings with "snap debug timings"
+ - tests/upgrade/basic, packaging/fedoar: restore SELinux context of
+   /var/cache/fontconfig, patch pre-2.39 mount units
+ - image: simplify prefer local logic  and fixes
+ - tests/main/selinux-lxd: make sure LXD from snaps works cleanly
+   with enforcing SELinux
+ - tests: deny ioctl - TIOCSTI with garbage in high bits
+ - overlord: factor out mocking of device service and gadget w.
+   prepare-device for registration tests
+ - data/selinux, tests/main/selinux-clean: fine tune the policy, make
+   sure that no denials are raised
+ - cmd/libsnap,osutil: fix parsing of mountinfo
+ - ubuntu: disable -buildmode=pie on armhf to fix memory issue
+ - overlord/snapstate: inhibit refresh for up to a week
+ - cmd/snap-confine: prevent cwd restore permission bypass
+ - overlord/ifacestate: introduce HotplugKey type use short key in
+   change summaries
+ - many: make Remodel() download everything first before installing
+ - tests: fixes discovered debugging refresh-app-awareness
+ - overlord/snapstate: track time of postponed refreshes
+ - snap-confine: set rootfs_dir in sc_invocation struct
+ - tests: run create-user on core devices
+ - boot: add flag file "meta/force-kernel-extraction"
+ - tests: add regression test for systemctl race fix
+ - overlord/snapshotstate: helpers for snapshot expirations
+ - overlord,tests: perform soft refresh check in doInstall
+ - tests: enable tests that write /etc/{hostname,timezone} on core18
+ - overlord/ifacestate: implement String() method of
+   HotplugDeviceInfo for better logs/messages
+ - cmd/snap-confine: move ubuntu-core fallback checks
+ - testutil: fix MockCmd for shellcheck 0.5
+ - snap, gadget: move gadget read/validation into separate package,
+   tweak naming
+ - tests: split travis spread execution in 2 jobs for ubuntu and non
+   ubuntu systems
+ - testutil: make mocked command work with shellcheck from snaps
+ - packaging/fedora, tests/upgrade/basic: patch existing mount units
+   with SELinux context on upgrade
+ - metautil, snap: extract yaml value normalization to a helper
+   package
+ - tests: use apt via eatmydata
+ - dirs,overlord/snapstate: add Soft and Hard refresh checks
+ - cmd/snap-confine: allow using tools from snapd snap
+ - cmd,interfaces: replace local helpers with cmd.InternalToolPath
+ - tweak: fix "make hack" on Fedora
+ - snap: add validation of gadget.yaml
+ - cmd/snap-update-ns: refactor of profile application
+ - cmd/snap,client,daemon,store: layout and sanity tweaks for
+   find/search options
+ - tests: add workaround for missing cache reset on older snapd
+ - interfaces: deal with the snapd snap correctly for apparmor 2.13
+ - release-tools: add debian-package-builder
+ - tests: enable opensuse 15 and add force-resolution installing
+   packages
+ - timings: AddTag helper
+ - testutil: run mocked commands through shellcheck
+ - overlord/snapshotstate: support auto flag
+ - client, daemon, store: search by common-id
+ - tests: all the systems for google backend with 6 workers
+ - interfaces: hotplug nested vm test, updated serial-port interface
+   for hotplug.
+ - sanity: use proper SELinux context when mounting squashfs
+ - cmd/libsnap: neuter variables in cleanup functions
+ - interfaces/adb-support: account for hubs on sysfs path
+ - interfaces/seccomp: regenerate changed profiles only
+ - snap: reject layouts to /lib/{firmware,modules}
+ - cmd/snap-confine, packaging: support SELinux
+ - selinux, systemd: support mount contexts for snap images
+ - interfaces/builtin/opengl: allow access to Tegra X1
+ - cmd/snap: make 'snap warnings' output yamlish
+ - tests: add check to detect a broken snap on reset
+ - interfaces: add one-plus devices to adb-support
+ - cmd: prevent umask from breaking snap-run chain
+ - tests/lib/pkgdb: allow downgrade when installing packages in
+   openSUSE
+ - cmd/snap-confine: use fixed private tmp directory
+ - snap: tweak parsing errors of gadget updates
+ - overlord/ifacemgr: basic measurements
+ - spread: refresh metadata on openSUSE
+ - cmd/snap-confine: pass sc_invocation instead of numerous args
+   around
+ - snap/gadget: introduce volume update info
+ - partition,bootloader: rename 'partition' package to 'bootloader'
+ - interfaces/builtin: add dev/pts/ptmx access to docker_support
+ - tests: restore sbuild test
+ - strutil: make SplitUnit public, allow negative numbers
+ - overlord/snapstate,: retry less for auto-stuff
+ - interfaces/builtin: add add exec "/" to docker-support
+ - cmd/snap: fix regression of snap saved command
+ - cmd/libsnap: rename C enum for feature flag
+ - cmd: typedef mountinfo structures
+ - tests/main/remodel: clean up before reverting the state
+ - cmd/snap-confine: umount scratch dir using UMOUNT_NOFOLLOW
+ - timings: add new helpers, Measurer interface and DurationThreshold
+ - cmd/snap-seccomp: version-info subcommand
+ - errortracker: fix panic in Report if db cannot be opened
+ - sandbox/seccomp: a helper package wrapping calls to snap-seccomp
+ - many: add /v2/model API, `snap remodel` CLI and spread test
+ - tests: enable opensuse tumbleweed back
+ - overlord/snapstate, store: set a header when auto-refreshing
+ - data/selinux, tests: refactor SELinux policy, add minimal tests
+ - spread: restore SELinux context when we mess with system files
+ - daemon/api: filter connections with hotplug-gone=true
+ - daemon: support returning assertion information as JSON with the
+   "json" query parameter
+ - cmd/snap: hide 'interfaces' command, show deprecation notice
+ - timings: base API for recording timings in state
+ - cmd/snap-confine: drop unused dependency on libseccomp
+ - interfaces/apparmor: factor out test boilerplate
+ - daemon: extract assertions api endpoint implementation into
+   api_asserts.go
+ - spread.yaml: bump delta reference
+ - cmd/snap-confine: track per-app and per-hook processes
+ - cmd/snap-confine: make sc_args helpers const-correct
+ - daemon: move a function that was between an other struct and its
+   methods
+ - overlord/snapstate: fix restoring of "old-current" revision config
+   in undoLinkSnap
+ - cmd/snap, client, daemon, ifacestate: show a leading attribute of
+   a connection
+ - cmd/snap-confine: call sc_should_use_normal_mode once
+ - cmd/snap-confine: populate enter_non_classic_execution_environment
+ - daemon: allow downloading snaps blobs via .../file
+ - cmd/snap-confine: introduce sc_invocation
+ - devicestate: add initial Remodel support
+ - snap: remove obsolete license-* fields in the yaml
+ - cmd/libsnap: add cgroup-pids-support module
+ - overlord/snapstate/backend: make LinkSnap clean up more
+ - snapstate: only keep 2 snaps on classic
+ - ctlcmd/tests: tests tweaks (followup to #6322)
+
+* Tue Apr 23 2019 Robert-André Mauchin <zebob.m@gmail.com> - 2.38-3
 - Rebuilt for fix in golang-github-seccomp-libseccomp-golang
 
 * Fri Apr 05 2019 Neal Gompa <ngompa13@gmail.com> - 2.38-2
