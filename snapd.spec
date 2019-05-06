@@ -53,11 +53,8 @@
 %global snappy_svcs     snapd.service snapd.socket snapd.autoimport.service snapd.seeded.service
 
 # Until we have a way to add more extldflags to gobuild macro...
-%if 0%{?fedora} >= 26
+%if 0%{?fedora}
 %define gobuild_static(o:) go build -buildmode pie -compiler gc -tags=rpm_crashtraceback -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
-%endif
-%if 0%{?fedora} == 25
-%define gobuild_static(o:) go build -compiler gc -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '-static'" -a -v -x %{?**};
 %endif
 %if 0%{?rhel} == 7
 %define gobuild_static(o:) go build -compiler gc -tags=rpm_crashtraceback -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
@@ -183,8 +180,8 @@ BuildRequires:  libseccomp-static
 %endif
 BuildRequires:  valgrind
 BuildRequires:  %{_bindir}/rst2man
-%if 0%{?fedora} >= 25
-# ShellCheck in F24 and older doesn't work
+%if 0%{?fedora}
+# ShellCheck in EPEL is too old...
 BuildRequires:  %{_bindir}/shellcheck
 %endif
 
@@ -823,6 +820,7 @@ fi
 - Enable basic SELinux integration
 - Fix changelog entry to fix build for EPEL 7
 - Exclude bash and POSIX sh shebangs from mangling (LP:1824158)
+- Drop some old pre Fedora 28 logic
 
 * Fri May 03 2019 Michael Vogt <mvo@ubuntu.com>
 - New upstream release 2.39
