@@ -1,0 +1,92 @@
+From c123a2c5e5c943577641d23a73425690a5c6dc1a Mon Sep 17 00:00:00 2001
+From: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+Date: Tue, 4 Jun 2019 13:38:20 +0200
+Subject: [PATCH] data/selinux: permit init_t to remount snappy_snap_t (#6946)
+
+Systemd services that get a new mount namespace on startup fail due to SELinux
+blocking system from remounting /var/lib/snapd/snap into the new mount ns.
+
+Since we cannot declare fs_type() and generate contexts through genfscon outside
+of core policy, add an explicit permission for init_t.
+
+type=AVC msg=audit(1559625610.991:67): avc:  denied  { remount } for  pid=578
+         comm="(resolved)"
+         scontext=system_u:system_r:init_t:s0
+         tcontext=system_u:object_r:snappy_snap_t:s0
+         tclass=filesystem permissive=0
+
+Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=1708991
+---
+ data/selinux/snappy.te                  | 10 ++++++++
+ tests/regression/rhbz-1708991/task.yaml | 33 +++++++++++++++++++++++++
+ 2 files changed, 43 insertions(+)
+ create mode 100644 tests/regression/rhbz-1708991/task.yaml
+
+diff --git a/data/selinux/snappy.te b/data/selinux/snappy.te
+index 4c7bf0002..de3e94888 100644
+--- a/data/selinux/snappy.te
++++ b/data/selinux/snappy.te
+@@ -60,7 +60,12 @@ files_tmp_file(snappy_tmp_t)
+ 
+ # actual snap
+ type snappy_snap_t;
++# XXX: snappy_snap_t should be declared a filesystem, but due to how modules are
++# handled we cannot generate required contexts with genfscon outside of core
++# policy
++# fs_type(snappy_snap_t)
+ files_type(snappy_snap_t)
++files_mountpoint(snappy_snap_t)
+ 
+ # CLI tools: snap, snapctl
+ type snappy_cli_t;
+@@ -615,3 +620,8 @@ allow init_t snappy_var_t:dir manage_dir_perms;
+ allow init_t snappy_var_t:sock_file manage_sock_file_perms;
+ # the snap is started via `snap run ..`
+ allow init_t snappy_cli_t:unix_stream_socket create_stream_socket_perms;
++# init_t will try to remount snap mount directory when starting services that
++# use Private* directives, while init_t is allowed to remount all fs, we cannot
++# declare fs_type(snappy_snap_t) outside of core policy, add explicit permission
++# instead
++allow init_t snappy_snap_t:filesystem remount;
+diff --git a/tests/regression/rhbz-1708991/task.yaml b/tests/regression/rhbz-1708991/task.yaml
+new file mode 100644
+index 000000000..e1f960c9b
+--- /dev/null
++++ b/tests/regression/rhbz-1708991/task.yaml
+@@ -0,0 +1,33 @@
++summary: Check that snapd SELinux policy does not break systemd services with private mount ns
++
++systems: [fedora-*, centos-*]
++
++prepare: |
++    #shellcheck source=tests/lib/pkgdb.sh
++    . "$TESTSLIB"/pkgdb.sh
++
++    if [[ "$SPREAD_SYSTEM" == centos-7-* ]]; then
++        distro_install_package systemd-resolved
++    fi
++
++    getenforce > enforcing.mode
++
++    # Enable enforcing mode, our policy is already marked as permissive, so we
++    # will get audit entries but the program will not be stopped by SELinux
++    setenforce 1
++    ausearch --checkpoint stamp -m AVC || true
++
++restore: |
++    setenforce "$(cat enforcing.mode)"
++    rm -f stamp enforcing.mode
++
++execute: |
++    # global prepare calls systemctl daemon-reexec to make systemd run with
++    # additional init_t permissions from snapd package, workaround for:
++    # https://bugzilla.redhat.com/show_bug.cgi?id=1660141
++    # https://github.com/systemd/systemd/issues/9997
++
++    # resolved and hostnamed have private mount ns
++    systemctl restart systemd-resolved
++    systemctl restart systemd-hostnamed
++    ausearch -i --checkpoint stamp --start checkpoint -m AVC 2>&1 | MATCH 'no matches'
+-- 
+2.21.0
+

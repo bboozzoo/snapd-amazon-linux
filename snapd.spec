@@ -75,7 +75,7 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.39
+Version:        2.39.1
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
@@ -85,6 +85,11 @@ Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 
 # Upstream proposed PR: https://github.com/snapcore/snapd/pull/3162
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
+
+# Backports from upstream
+## Fix issues with domain transitions for mount namespaces (RH#1708991)
+## From: https://github.com/snapcore/snapd/commit/c123a2c5e5c943577641d23a73425690a5c6dc1a
+Patch0101:      0001-data-selinux-permit-init_t-to-remount-snappy_snap_t-.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -815,6 +820,24 @@ fi
 
 
 %changelog
+* Tue Jun 04 2019 Neal Gompa <ngompa13@gmail.com> - 2.39.1-1
+- Release 2.39.1 to Fedora (RH#1715505)
+- Backport SELinux policy fixes for systemd unit mount namespacing (RH#1708991)
+
+* Wed May 29 2019 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.39.1
+ - spread: enable Fedora 30
+ - cmd/snap-confine, data/selinux: cherry pick Fedora 30 fixes
+ - tests/unit/spread-shellcheck: temporary workaround for SC2251
+ - packaging: build empty package on powerpc
+ - interfaces: special-case "snapd" in sanitizeSlotReservedForOS*
+   helper
+ - cmd/snap: mangle descriptions that have indent > terminal width
+ - cmd/snap-confine: unshare per-user mount ns once
+ - tests: avoid adding spaces to the base snaps names
+ - systemd: workaround systemctl show quirks on older systemd
+   versions
+
 * Mon May 06 2019 Neal Gompa <ngompa13@gmail.com> - 2.39-1
 - Release 2.39 to Fedora (RH#1699087)
 - Enable basic SELinux integration
