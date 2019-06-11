@@ -76,7 +76,7 @@
 
 Name:           snapd
 Version:        2.39.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -90,6 +90,12 @@ Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
 ## Fix issues with domain transitions for mount namespaces (RH#1708991)
 ## From: https://github.com/snapcore/snapd/commit/c123a2c5e5c943577641d23a73425690a5c6dc1a
 Patch0101:      0001-data-selinux-permit-init_t-to-remount-snappy_snap_t-.patch
+## Fix issues running hooks and services from snaps with bases and classic snaps
+## From: https://github.com/snapcore/snapd/commit/9a3286edb0b0a6391f7329d64be1e3f7d1e886ce
+Patch0102:      0001-data-selinux-allow-running-hooks-and-services-from-c.patch
+## Bump SELinux policy version
+## From: https://github.com/snapcore/snapd/commit/e690755f23dd4ac17df7160a20819a3194cbdd34
+Patch0103:      0001-data-selinux-bump-SELinux-policy-module-version.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -820,6 +826,11 @@ fi
 
 
 %changelog
+* Tue Jun 11 2019 Maciej Borzecki <maciek.borzecki@gmail.com> - 2.39.1-2
+- Fix SELinux policy to allow running hooks and services from snaps with bases
+  and classic snaps
+- Bump SELinux policy version
+
 * Tue Jun 04 2019 Neal Gompa <ngompa13@gmail.com> - 2.39.1-1
 - Release 2.39.1 to Fedora (RH#1715505)
 - Backport SELinux policy fixes for systemd unit mount namespacing (RH#1708991)
