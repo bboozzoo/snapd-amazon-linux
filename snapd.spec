@@ -75,8 +75,8 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.39.1
-Release:        2%{?dist}
+Version:        2.39.2
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -87,9 +87,6 @@ Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 Patch0001:      0001-cmd-use-libtool-for-the-internal-library.patch
 
 # Backports from upstream
-## Fix issues with domain transitions for mount namespaces (RH#1708991)
-## From: https://github.com/snapcore/snapd/commit/c123a2c5e5c943577641d23a73425690a5c6dc1a
-Patch0101:      0001-data-selinux-permit-init_t-to-remount-snappy_snap_t-.patch
 ## Fix issues running hooks and services from snaps with bases and classic snaps
 ## From: https://github.com/snapcore/snapd/commit/9a3286edb0b0a6391f7329d64be1e3f7d1e886ce
 Patch0102:      0001-data-selinux-allow-running-hooks-and-services-from-c.patch
@@ -826,10 +823,22 @@ fi
 
 
 %changelog
+* Fri Jun 14 2019 Neal Gompa <ngompa13@gmail.com> - 2.39.2-1
+- Release 2.39.2 to Fedora (RH#1717448)
+- Drop patch included in this release
+
 * Tue Jun 11 2019 Maciej Borzecki <maciek.borzecki@gmail.com> - 2.39.1-2
 - Fix SELinux policy to allow running hooks and services from snaps with bases
   and classic snaps
 - Bump SELinux policy version
+
+* Wed Jun 05 2019 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.39.2
+ - debian: rework how we run autopkgtests
+ - interfaces/docker-support: add overlayfs accesses for ubuntu core
+ - data/selinux: permit init_t to remount snappy_snap_t
+ - strutil/shlex: fix ineffassign
+ - packaging: fix build-depends on powerpc
 
 * Tue Jun 04 2019 Neal Gompa <ngompa13@gmail.com> - 2.39.1-1
 - Release 2.39.1 to Fedora (RH#1715505)
