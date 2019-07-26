@@ -76,7 +76,7 @@
 
 Name:           snapd
 Version:        2.39.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -823,6 +823,9 @@ fi
 
 
 %changelog
+* Fri Jul 26 2019 Fedora Release Engineering <releng@fedoraproject.org> - 2.39.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_31_Mass_Rebuild
+
 * Fri Jun 14 2019 Neal Gompa <ngompa13@gmail.com> - 2.39.2-1
 - Release 2.39.2 to Fedora (RH#1717448)
 - Drop patch included in this release
