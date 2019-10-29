@@ -74,7 +74,7 @@
 
 Name:           snapd
 Version:        2.42
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -171,7 +171,6 @@ BuildRequires:  glibc-static
 %if ! 0%{?rhel}
 BuildRequires:  libseccomp-static
 %endif
-BuildRequires:  valgrind
 BuildRequires:  %{_bindir}/rst2man
 %if 0%{?fedora}
 # ShellCheck in EPEL is too old...
@@ -489,7 +488,7 @@ autoreconf --force --install --verbose
     --with-snap-mount-dir=%{_sharedstatedir}/snapd/snap \
     --enable-merged-usr
 
-%make_build
+%make_build HAVE_VALGRIND=
 popd
 
 # Build systemd units, dbus services, and env files
@@ -640,7 +639,7 @@ sort -u -o devel.file-list devel.file-list
 
 %check
 for binary in snap-exec snap-update-ns snapctl; do
-    ldd bin/$binary | grep 'not a dynamic executable'
+    ldd bin/$binary 2>&1 | grep 'not a dynamic executable'
 done
 
 # snapd tests
@@ -829,6 +828,11 @@ fi
 
 
 %changelog
+* Tue Oct 29 2019 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.42-2
+- Valgrind fails with assertions on ppc64le (RH#1766519), drop it as a build
+  dependency and do not invoke in unit tests
+- Redirect stderr in dynamic executable check
+
 * Fri Oct  4 2019 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.42-1
 - Release snapd 2.42 to Fedora
 - Drop libtool patch
