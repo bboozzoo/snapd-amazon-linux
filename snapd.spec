@@ -24,6 +24,11 @@
 %global with_multilib 1
 %endif
 
+# Set if valgrind is to be run
+%ifnarch ppc64le
+%global with_valgrind 1
+%endif
+
 %if ! %{with vendorized}
 %global with_bundled 0
 %else
@@ -170,6 +175,9 @@ BuildRequires:  xfsprogs-devel
 BuildRequires:  glibc-static
 %if ! 0%{?rhel}
 BuildRequires:  libseccomp-static
+%endif
+%if 0%{?with_valgrind}
+BuildRequires:  valgrind
 %endif
 BuildRequires:  %{_bindir}/rst2man
 %if 0%{?fedora}
@@ -488,7 +496,7 @@ autoreconf --force --install --verbose
     --with-snap-mount-dir=%{_sharedstatedir}/snapd/snap \
     --enable-merged-usr
 
-%make_build HAVE_VALGRIND=
+%make_build %{!?with_valgrind:HAVE_VALGRIND=}
 popd
 
 # Build systemd units, dbus services, and env files
@@ -829,8 +837,7 @@ fi
 
 %changelog
 * Tue Oct 29 2019 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.42-2
-- Valgrind fails with assertions on ppc64le (RH#1766519), drop it as a build
-  dependency and do not invoke in unit tests
+- Drop valgrind BR on ppc64le (RH#1766519)
 - Redirect stderr in dynamic executable check
 
 * Fri Oct  4 2019 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.42-1
