@@ -3,6 +3,10 @@
   - role: standard-test-basic
     tags:
     - classic
+    required_packages:
+    # workaround https://bugzilla.redhat.com/show_bug.cgi?id=1652823 and explicitly
+    # install kernel-modules
+    - kernel-modules
     tests:
     - simple:
         dir: .
