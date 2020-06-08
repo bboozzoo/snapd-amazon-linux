@@ -85,17 +85,13 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.45
+Version:        2.45.1
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
-# cherry-picked from 2.45 branch, to be included in 2.45.1 release
-Patch0:         0001-zsh-completion.patch
-# proposed upstream https://github.com/snapcore/snapd/pull/8604
-Patch1:         0002-fontconfig-cache.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -520,10 +516,17 @@ sed -e "s/-Bstatic -lseccomp/-Bstatic/g" -i cmd/snap-seccomp/*.go
 %endif
 %gobuild -o bin/snap-seccomp $GOFLAGS %{import_path}/cmd/snap-seccomp
 
-# Build SELinux module
-pushd ./data/selinux
-make SHARE="%{_datadir}" TARGETS="snappy"
-popd
+(
+%if 0%{?rhel} == 7
+    M4PARAM='-D distro_rhel7'
+%endif
+    # Build SELinux module
+    cd ./data/selinux
+    # pass M4PARAM in env instead of as an override, so that make can still
+    # manipulate it freely, for more details see:
+    # https://www.gnu.org/software/make/manual/html_node/Override-Directive.html
+    M4PARAM="$M4PARAM" make SHARE="%{_datadir}" TARGETS="snappy"
+)
 
 # Build snap-confine
 pushd ./cmd
@@ -887,6 +890,39 @@ fi
 
 
 %changelog
+* Mon Jun  8 2020 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.45.1-1
+- Release 2.45.1 to Fedora (RHBZ#1844628)
+- Drop cherry-picked patches that are part of the release
+
+* Fri Jun 05 2020 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.45.1
+ - data/selinux: allow checking /var/cache/app-info
+ - cmd/snap-confine: add support for libc6-lse
+ - interfaces: miscellanious policy updates xlv
+ - snap-bootstrap: remove sealed key file on reinstall
+ - interfaces-ssh-keys: Support reading /etc/ssh/ssh_config.d/
+ - gadget: make ext4 filesystems with or without metadata checksum
+ - interfaces/fwupd: allow bind mount to /boot on core
+ - tests: cherry-pick test fixes from master
+ - snap/squashfs: also symlink snap Install with uc20 seed snap dir
+   layout
+ - interfaces/serial-port: add NXP SC16IS7xx (ttySCX) to allowed
+   devices
+ - snap,many: mv Open to snapfile pkg to support add'l options to
+   Container methods
+ - interfaces/builtin/desktop: do not mount fonts cache on distros
+   with quirks
+ - devicestate, sysconfig: revert support for cloud.cfg.d/ in the
+   gadget
+ - data/completion, packaging: cherry-pick zsh completion
+ - state: log task errors in the journal too
+ - devicestate: do not report "ErrNoState" for seeded up
+ - interfaces/desktop: silence more /var/lib/snapd/desktop/icons
+   denials
+ - packaging/fedora: disable FIPS compliant crypto for static
+   binaries
+ - packaging: stop depending on python-docutils
+
 * Wed May 20 2020 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.45-1
 - Release 2.45 to Fedora (RHBZ#1814552)
 - Cherry pick zsh completion patch
