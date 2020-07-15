@@ -85,7 +85,7 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.45.1
+Version:        2.45.2
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
@@ -890,6 +890,24 @@ fi
 
 
 %changelog
+* Wed Jul 15 2020 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.45.2-1
+- release 2.45.2 to Fedora
+
+* Fri Jul 10 2020 Michael Vogt <mvo@ubuntu.com>
+- New upstream release 2.45.2
+ - SECURITY UPDATE: sandbox escape vulnerability on snapctl xdg-open
+   implementation
+   - usersession/userd/launcher.go: remove XDG_DATA_DIRS environment
+     variable modification when calling the system xdg-open. Patch
+     thanks to James Henstridge
+   - packaging/ubuntu-16.04/snapd.postinst: ensure "snap userd" is
+     restarted. Patch thanks to Michael Vogt
+   - CVE-2020-11934
+ - SECURITY UPDATE: arbitrary code execution vulnerability on core
+   devices with access to physical removable media
+   - devicestate: Disable/restrict cloud-init after seeding.
+   - CVE-2020-11933
+
 * Mon Jun  8 2020 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.45.1-1
 - Release 2.45.1 to Fedora (RHBZ#1844628)
 - Drop cherry-picked patches that are part of the release
