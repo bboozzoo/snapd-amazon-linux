@@ -59,18 +59,18 @@
 %global snappy_user_svcs snapd.session-agent.service snapd.session-agent.socket
 
 # Until we have a way to add more extldflags to gobuild macro...
+# Trigger external linker manually, otherwise -extldflags have no meaning.
 %if 0%{?fedora} || 0%{?rhel} >= 8
-# buildmode PIE triggers external linker consumes -extldflags
-%define gobuild_static(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
+%define gobuild_static(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
 %endif
 %if 0%{?rhel} == 7
-# trigger external linker manually, otherwise -extldflags have no meaning
+# no pass PIE flags due to https://bugzilla.redhat.com/show_bug.cgi?id=1634486
 %define gobuild_static(o:) go build -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
 %endif
 
 # These macros are missing BUILDTAGS in RHEL 8, see RHBZ#1825138
 %if 0%{?rhel} == 8
-%define gobuild(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -extldflags '%__global_ldflags'" -a -v -x %{?**};
+%define gobuild(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "${LDFLAGS:-} -B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags'" -a -v -x %{?**};
 %endif
 
 # These macros are not defined in RHEL 7
@@ -85,8 +85,8 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.45.2
-Release:        3%{?dist}
+Version:        2.45.3.1
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -890,12 +890,42 @@ fi
 
 
 %changelog
+* Tue Aug  4 2020 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.45.3.1-1
+- Release 2.45.3.1 to Fedora (RHBZ#1861024)
+- Fix FTBFS in Rawhide (RHBZ#1865496)
+
 * Sat Aug 01 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.45.2-3
 - Second attempt - Rebuilt for
   https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
 
 * Wed Jul 29 2020 Fedora Release Engineering <releng@fedoraproject.org> - 2.45.2-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_33_Mass_Rebuild
+
+* Tue Jul 28 2020 Samuele Pedroni <pedronis@lucediurna.net>
+- New upstream release, LP: #1875071
+  - o/ifacestate: fix bug in snapsWithSecurityProfiles
+  - tests/main/selinux-clean: workaround SELinux denials triggered by
+    linger setup on Centos8
+
+* Mon Jul 27 2020 Zygmunt Krynicki <me@zygoon.pl>
+- New upstream release, LP: #1875071
+  - many: backport _writable_defaults dir changes
+  - tests: fix incorrect check in smoke/remove test
+  - cmd/snap-bootstrap,seed: backport of uc20 PRs
+  - tests: avoid exit when nested type var is not defined
+  - cmd/snap-preseed: backport fixes
+  - interfaces: optimize rules of multiple connected iio/i2c/spi plugs
+  - many: cherry-picks for 2.45, gh-action, test fixes
+  - tests/lib: account for changes in arch package file name extension
+  - postrm, snap-mgmt: cleanup modules and other cherry-picks
+  - snap-confine: don't die if a device from sysfs path cannot be
+    found by udev
+  - data/selinux: update policy to allow forked processes to call
+    getpw*()
+  - tests/main/interfaces-time-control: exercise setting time via date
+  - interfaces/builtin/time-control: allow POSIX clock API
+  - usersession/userd: add "slack" to the white list of URL schemes
+    handled by xdg-open
 
 * Wed Jul 15 2020 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.45.2-1
 - release 2.45.2 to Fedora
