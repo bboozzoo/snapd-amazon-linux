@@ -1,4 +1,10 @@
 - hosts: localhost
+  pre_tasks:
+  - name: Reboot after installing the package
+    # in the case when kernel-modules pulled in a new kernel, this will make
+    # the system reboot to the new kernel so that squashfs is available
+    reboot:
+
   roles:
   - role: standard-test-basic
     tags:
