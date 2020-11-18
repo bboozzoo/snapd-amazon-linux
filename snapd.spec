@@ -103,7 +103,7 @@
 
 Name:           snapd
 Version:        2.47.1
-Release:        1%{?dist}
+Release:        1%{?dist}.1
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -191,6 +191,7 @@ Summary:        Confinement system for snap applications
 License:        GPLv3
 BuildRequires:  autoconf
 BuildRequires:  automake
+BuildRequires:  make
 BuildRequires:  libtool
 BuildRequires:  gcc
 BuildRequires:  gettext
@@ -881,7 +882,11 @@ popd
 %sysctl_apply 99-snap.conf
 %endif
 %systemd_post %{snappy_svcs}
-%systemd_user_post %{snappy_user_svcs}
+
+# fixed in upstream and in RHEL7 https://github.com/systemd/systemd/commit/e67ba783696f21782ad5c2ba00515d387016e785
+# the fix is not availble in AMZN2 though
+# %%systemd_user_post %{snappy_user_svcs}
+
 # If install, test if snapd socket and timer are enabled.
 # If enabled, then attempt to start them. This will silently fail
 # in chroots or other environments where services aren't expected
@@ -947,6 +952,9 @@ fi
 
 
 %changelog
+* Wed Nov 18 2020 Maciek <maciek.borzecki@gmail.com> - 2.47.1-1.amzn2.1
+- Rebuild snapd for Amazon Linux 2
+
 * Mon Oct 12 2020 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.47.1-1
 - Release 2.47.1 to Fedora (RHBZ#1872528)
 
