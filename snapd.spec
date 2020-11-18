@@ -6,6 +6,14 @@
 %bcond_without vendorized
 %endif
 
+# With Amazon Linux 2+, we're going to provide the /snap symlink by default,
+# since classic snaps currently require it... :(
+%if 0%{?amzn} >= 2
+%bcond_without snap_symlink
+%else
+%bcond_with snap_symlink
+%endif
+
 # A switch to allow building the package with support for testkeys which
 # are used for the spread test suite of snapd.
 %bcond_with testkeys
@@ -15,6 +23,7 @@
 %global with_check 0
 %global with_unit_test 0
 %global with_test_keys 0
+%global with_selinux 1
 
 # For the moment, we don't support all golang arches...
 %global with_goarches 0
@@ -84,6 +93,14 @@
 %{!?_systemdgeneratordir: %global _systemdgeneratordir %{_prefix}/lib/systemd/system-generators}
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
+# Fedora selinux-policy includes 'map' permission on a 'file' class. However,
+# Amazon Linux 2 does not have the updated policy containing the fix for
+# https://bugzilla.redhat.com/show_bug.cgi?id=1574383.
+# For now disable SELinux on Amazon Linux 2 until it's fixed.
+%if 0%{?amzn2} == 1
+%global with_selinux 0
+%endif
+
 Name:           snapd
 Version:        2.47.1
 Release:        1%{?dist}
@@ -112,8 +129,11 @@ Requires:       squashfs-tools
 %if 0%{?rhel} && 0%{?rhel} < 8
 # Rich dependencies not available, always pull in squashfuse
 # snapd will use squashfs.ko instead of squashfuse if it's on the system
+# NOTE: Amazon Linux 2 does not have squashfuse, squashfs.ko is part of the kernel package
+%if ! 0%{?amzn2}
 Requires:       squashfuse
 Requires:       fuse
+%endif
 %else
 # snapd will use squashfuse in the event that squashfs.ko isn't available (cloud instances, containers, etc.)
 Requires:       ((squashfuse and fuse) or kmod(squashfs.ko))
@@ -122,8 +142,10 @@ Requires:       ((squashfuse and fuse) or kmod(squashfs.ko))
 # bash-completion owns /usr/share/bash-completion/completions
 Requires:       bash-completion
 
+%if 0%{?with_selinux}
 # Force the SELinux module to be installed
 Requires:       %{name}-selinux = %{version}-%{release}
+%endif
 
 %if 0%{?fedora} && 0%{?fedora} < 30
 # snapd-login-service is no more
@@ -176,7 +198,9 @@ BuildRequires:  gnupg
 BuildRequires:  pkgconfig(glib-2.0)
 BuildRequires:  pkgconfig(libcap)
 BuildRequires:  pkgconfig(libseccomp)
+%if 0%{?with_selinux}
 BuildRequires:  pkgconfig(libselinux)
+%endif
 BuildRequires:  pkgconfig(libudev)
 BuildRequires:  pkgconfig(systemd)
 BuildRequires:  pkgconfig(udev)
@@ -201,6 +225,7 @@ Obsoletes:      snap-confine < 2.19
 This package is used internally by snapd to apply confinement to
 the started snap applications.
 
+%if 0%{?with_selinux}
 %package selinux
 Summary:        SELinux module for snapd
 License:        GPLv2+
@@ -219,7 +244,7 @@ Requires(post): libselinux-utils
 %description selinux
 This package provides the SELinux policy module to ensure snapd
 runs properly under an environment with SELinux enabled.
-
+%endif
 
 %if 0%{?with_devel}
 %package devel
@@ -517,6 +542,7 @@ sed -e "s/-Bstatic -lseccomp/-Bstatic/g" -i cmd/snap-seccomp/*.go
 %endif
 %gobuild -o bin/snap-seccomp $GOFLAGS %{import_path}/cmd/snap-seccomp
 
+%if 0%{?with_selinux}
 (
 %if 0%{?rhel} == 7
     M4PARAM='-D distro_rhel7'
@@ -528,6 +554,7 @@ sed -e "s/-Bstatic -lseccomp/-Bstatic/g" -i cmd/snap-seccomp/*.go
     # https://www.gnu.org/software/make/manual/html_node/Override-Directive.html
     M4PARAM="$M4PARAM" make SHARE="%{_datadir}" TARGETS="snappy"
 )
+%endif
 
 # Build snap-confine
 pushd ./cmd
@@ -535,7 +562,9 @@ autoreconf --force --install --verbose
 # FIXME: add --enable-caps-over-setuid as soon as possible (setuid discouraged!)
 %configure \
     --disable-apparmor \
+%if 0%{?with_selinux}
     --enable-selinux \
+%endif
     --libexecdir=%{_libexecdir}/snapd/ \
     --enable-nvidia-biarch \
     %{?with_multilib:--with-32bit-libdir=%{_prefix}/lib} \
@@ -583,8 +612,10 @@ install -d -p %{buildroot}%{_sharedstatedir}/snapd/snap/bin
 install -d -p %{buildroot}%{_localstatedir}/snap
 install -d -p %{buildroot}%{_localstatedir}/cache/snapd
 install -d -p %{buildroot}%{_datadir}/polkit-1/actions
+%if 0%{?with_selinux}
 install -d -p %{buildroot}%{_datadir}/selinux/devel/include/contrib
 install -d -p %{buildroot}%{_datadir}/selinux/packages
+%endif
 
 # Install snap and snapd
 install -p -m 0755 bin/snap %{buildroot}%{_bindir}
@@ -597,9 +628,11 @@ install -p -m 0755 bin/snap-seccomp %{buildroot}%{_libexecdir}/snapd
 install -p -m 0755 bin/snapctl %{buildroot}%{_libexecdir}/snapd/snapctl
 ln -sf %{_libexecdir}/snapd/snapctl %{buildroot}%{_bindir}/snapctl
 
+%if 0%{?with_selinux}
 # Install SELinux module
 install -p -m 0644 data/selinux/snappy.if %{buildroot}%{_datadir}/selinux/devel/include/contrib
 install -p -m 0644 data/selinux/snappy.pp.bz2 %{buildroot}%{_datadir}/selinux/packages
+%endif
 
 # Install snap(8) man page
 bin/snap help --man > %{buildroot}%{_mandir}/man8/snap.8
@@ -665,6 +698,11 @@ echo 'SNAP_REEXEC=0' > %{buildroot}%{_sysconfdir}/sysconfig/snapd
 # Create state.json and the README file to be ghosted
 touch %{buildroot}%{_sharedstatedir}/snapd/state.json
 touch %{buildroot}%{_sharedstatedir}/snapd/snap/README
+
+# When enabled, create a symlink for /snap to point to /var/lib/snapd/snap
+%if %{with snap_symlink}
+ln -sr %{buildroot}%{_sharedstatedir}/snapd/snap %{buildroot}/snap
+%endif
 
 # source codes for building projects
 %if 0%{?with_devel}
@@ -738,7 +776,9 @@ popd
 %{_libexecdir}/snapd/snap-failure
 %{_libexecdir}/snapd/info
 %{_libexecdir}/snapd/snap-mgmt
+%if 0%{?with_selinux}
 %{_libexecdir}/snapd/snap-mgmt-selinux
+%endif
 %{_mandir}/man8/snap.8*
 %{_datadir}/applications/snap-handle-link.desktop
 %{_datadir}/bash-completion/completions/snap
@@ -789,6 +829,9 @@ popd
 %dir %{_localstatedir}/snap
 %ghost %{_sharedstatedir}/snapd/state.json
 %ghost %{_sharedstatedir}/snapd/snap/README
+%if %{with snap_symlink}
+/snap
+%endif
 # this is typically owned by zsh, but we do not want to explicitly require zsh
 %dir %{_datadir}/zsh
 %dir %{_datadir}/zsh/site-functions
@@ -812,12 +855,13 @@ popd
 %{_systemdgeneratordir}/snapd-generator
 %attr(0111,root,root) %{_sharedstatedir}/snapd/void
 
-
+%if 0%{?with_selinux}
 %files selinux
 %license data/selinux/COPYING
 %doc data/selinux/README.md
 %{_datadir}/selinux/packages/snappy.pp.bz2
 %{_datadir}/selinux/devel/include/contrib/snappy.if
+%endif
 
 %if 0%{?with_devel}
 %files devel -f devel.file-list
@@ -861,6 +905,7 @@ fi
 %systemd_postun_with_restart %{snappy_svcs}
 %systemd_user_postun_with_restart %{snappy_user_svcs}
 
+%if 0%{?with_selinux}
 %triggerun -- snapd < 2.39
 # TODO: the trigger relies on a very specific snapd version that introduced SELinux
 # mount context, figure out how to update the trigger condition to run when needed
@@ -898,6 +943,7 @@ fi
 if [ $1 -eq 0 ]; then
     %selinux_relabel_post
 fi
+%endif
 
 
 %changelog
