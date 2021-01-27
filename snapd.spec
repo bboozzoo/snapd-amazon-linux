@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.48.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -902,6 +902,9 @@ fi
 
 
 %changelog
+* Wed Jan 27 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.48.2-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
+
 * Fri Jan  8 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.48.2-1
 - Release 2.48.2 to Fedora (RHBZ#1899700)
 
