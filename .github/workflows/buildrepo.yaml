@@ -1,0 +1,29 @@
+name: Build repository
+on:
+  pull_request:
+    branches: [ "master"]
+  push:
+    branches: [ "master" ]
+
+jobs:
+  build-repo-job:
+    runs-on: ubuntu-latest
+    container: amazonlinux:2
+    steps:
+    - name: Install git
+      run: |
+        yum install git -y
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build RPM packages
+      run: |
+        IN_CONTAINER=1 ./tool build
+    - name: Build repository tarball
+      run: |
+        IN_CONTAINER=1 ./tool createrepo
+        tar -cJv repo > amazon-linux-2-repo.tar.xz
+    - name: Uploading repository tarball
+      uses: actions/upload-artifact@v2
+      with:
+        name: repo-tarball
+        path: "amazon-linux-2-repo*.tar.xz"
