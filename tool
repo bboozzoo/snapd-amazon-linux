@@ -12,7 +12,7 @@ DOCKER_IMG=amazonlinux:2
 #HELP:              build the snapd package under $PWD/rpmbuild
 build_in_container() {
     yum install -y yum-utils rpm-build
-    yum-builddep -y /mnt/snapd.spec
+    yum-builddep -y "$PWD/snapd.spec"
 
     mkdir -p "$PWD/rpmbuild/SOURCES"
     cp -av snapd_*.*-vendor.tar.xz "$PWD/rpmbuild/SOURCES/"
