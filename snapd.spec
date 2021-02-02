@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.48.2
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -474,6 +474,7 @@ export GOPATH=$(pwd):%{gopath}
 %else
 export GOPATH=$(pwd):$(pwd)/Godeps/_workspace:%{gopath}
 %endif
+export GO111MODULE=off
 
 # see https://github.com/gofed/go-macros/blob/master/rpm/macros.d/macros.go-compilers-golang
 BUILDTAGS=
@@ -714,6 +715,7 @@ export GOPATH=%{buildroot}/%{gopath}:%{gopath}
 %else
 export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %endif
+export GO111MODULE=off
 %gotest %{import_path}/...
 %endif
 
@@ -902,6 +904,9 @@ fi
 
 
 %changelog
+* Tue Feb  2 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.48.2-3
+- Explicitly disable go module support during build (RHBZ#1923716)
+
 * Wed Jan 27 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.48.2-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_34_Mass_Rebuild
 
