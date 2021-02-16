@@ -86,12 +86,14 @@
 
 Name:           snapd
 Version:        2.49
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
+# cherry-pick from upstream: https://github.com/snapcore/snapd/commit/fe195de4ffbae7533eb21634b6817c660afb7468
+Patch0:         0001-data-selinux-allow-system-dbus-to-watch-var-lib-snap.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -906,6 +908,9 @@ fi
 
 
 %changelog
+* Tue Feb 16 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.49-2
+- Fix SELinux policy to allow dbus-daemon watch access on /var/lib/snapd/dbus-1 (LP#1915642)
+
 * Thu Feb 11 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.49-1
 - Release snapd 2.49 to Fedora (RHBZ#1927314)
 - Include fix for CVE-2020-27352 (RHBZ#1927428, RHBZ#1927432)
