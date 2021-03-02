@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.49
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -908,6 +908,10 @@ fi
 
 
 %changelog
+* Tue Mar 02 2021 Zbigniew Jędrzejewski-Szmek <zbyszek@in.waw.pl> - 2.49-3
+- Rebuilt for updated systemd-rpm-macros
+  See https://pagure.io/fesco/issue/2583.
+
 * Tue Feb 16 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.49-2
 - Fix SELinux policy to allow dbus-daemon watch access on /var/lib/snapd/dbus-1 (LP#1915642)
 
