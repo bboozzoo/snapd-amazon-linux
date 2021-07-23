@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.51
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -933,6 +933,9 @@ fi
 
 
 %changelog
+* Fri Jul 23 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.51-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
+
 * Mon May 31 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.51-1
 - Relase 2.51 to Fedora (RHBZ#1962474)
 
