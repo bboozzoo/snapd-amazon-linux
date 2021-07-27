@@ -86,12 +86,14 @@
 
 Name:           snapd
 Version:        2.51
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
+# cherry-picked from https://github.com/snapcore/snapd/pull/10565
+Patch0:         0001-cmd-libsnap-confine-private-g_spawn_check_exit_statu.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -933,6 +935,9 @@ fi
 
 
 %changelog
+* Tue Jul 27 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.51-3
+- Fix FTBFS with glib 2.69
+
 * Fri Jul 23 2021 Fedora Release Engineering <releng@fedoraproject.org> - 2.51-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_35_Mass_Rebuild
 
