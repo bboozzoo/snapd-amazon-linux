@@ -86,14 +86,16 @@
 
 Name:           snapd
 Version:        2.51
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
-# cherry-picked from https://github.com/snapcore/snapd/pull/10565
+# cherry-picked from https://github.com/snapcore/snapd/commit/243900000f145eddc6b6bf1546400a9556bb2762
 Patch0:         0001-cmd-libsnap-confine-private-g_spawn_check_exit_statu.patch
+# cherry-picked from https://github.com/snapcore/snapd/commit/dfba7de59a41bc22786d87f53b20deea14240713
+Patch1:         0002-snap-squashfs-handle-squashfs-tools-4.5.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -935,6 +937,9 @@ fi
 
 
 %changelog
+* Fri Jul 30 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.51-4
+- Cherry pick a compatibility fix for squashfs 4.5+
+
 * Tue Jul 27 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.51-3
 - Fix FTBFS with glib 2.69
 
