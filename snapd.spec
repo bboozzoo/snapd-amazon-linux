@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.53.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -572,6 +572,9 @@ autoreconf --force --install --verbose
 %configure \
     --disable-apparmor \
     --enable-selinux \
+%if 0%{?rhel} == 7
+    --disable-bpf \
+%endif
     --libexecdir=%{_libexecdir}/snapd/ \
     --enable-nvidia-biarch \
     %{?with_multilib:--with-32bit-libdir=%{_prefix}/lib} \
@@ -940,6 +943,9 @@ fi
 
 
 %changelog
+* Tue Nov  2 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.1-2
+- Disable BPF support on systems that are too old
+
 * Tue Nov  2 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.1-1
 - Release 2.53.1 to Fedora
 
