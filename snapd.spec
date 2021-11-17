@@ -85,15 +85,13 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.53.1
-Release:        2%{?dist}
+Version:        2.53.2
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
-# cherry-picked from https://github.com/snapcore/snapd/commit/463edb369455fff83ea2fefcd932cbf64d48e285
-Patch0:         0001-data-selinux-allow-snap-confine-to-read-udev-s-datab.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -943,6 +941,40 @@ fi
 
 
 %changelog
+* Wed Nov 17 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.2-1
+- Release 2.53.2 to Fedora
+
+* Mon Nov 15 2021 Ian Johnson <ian.johnson@canonical.com>
+- New upstream release 2.53.2
+ - interfaces/builtin/block_devices: allow blkid to print block
+   device attributes/run/udev/data/b{major}:{minor}
+ - cmd/libsnap-confine-private: do not deny all devices when reusing
+   the device cgroup
+ - interfaces/builtin/time-control: allow pps access
+ - interfaces/u2f-devices: add Trezor and Trezor v2 keys
+ - interfaces: timezone-control, add permission for ListTimezones
+   DBus call
+ - interfaces/apparmor/template.go: allow udevadm from merged usr
+   systems
+ - interface/modem-manager: allow connecting to the mbim/qmi proxy
+ - interfaces/network-manager-observe: Update for libnm client
+   library
+ - cmd/snap-seccomp/syscalls: update syscalls to match libseccomp
+   abad8a8f4
+ - sandbox/cgroup: freeze and thaw cgroups related to services and
+   scopes only
+ - o/hookstate: print cohort with snapctl refresh --pending
+ - cmd/snap-confine: lazy set up of device cgroup, only when devices
+   were assigned
+ - tests: ensure systemd-timesyncd is installed on debian
+ - tests/lib/pkgdb: install strace on Debian 11 and Sid
+ - tests/main/snapd-sigterm: flush, use retry
+ - tests/main/snapd-sigterm: fix race conditions
+ - release-tools/repack-debian-tarball.sh: fix c-vendor dir
+ - data/selinux: allow snap-confine to read udev's database
+ - interfaces/dsp: add more ambarella things* interfaces/dsp: add
+   more ambarella things
+
 * Tue Nov  2 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.1-2
 - Disable BPF support on systems that are too old
 
