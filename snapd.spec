@@ -86,12 +86,13 @@
 
 Name:           snapd
 Version:        2.53.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
+Patch0:         0001-cmd-libsnap-confine-private-fix-snap-device-helper-d.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -941,6 +942,9 @@ fi
 
 
 %changelog
+* Mon Nov 29 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.2-2
+- Cherry-pick a fix for snap-device-helper (RHBZ#2025264)
+
 * Wed Nov 17 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.2-1
 - Release 2.53.2 to Fedora
 
