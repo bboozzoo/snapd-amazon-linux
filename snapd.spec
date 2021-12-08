@@ -85,14 +85,15 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.53.2
-Release:        2%{?dist}
+Version:        2.53.4
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
-Patch0:         0001-cmd-libsnap-confine-private-fix-snap-device-helper-d.patch
+# cherry picked from https://github.com/snapcore/snapd/commit/f4cefc704d6c46f204b0a0651379e0766d478ba5
+Patch0:         0001-cmd-snap-confine-do-not-include-libglvnd-libraries-f.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -942,6 +943,39 @@ fi
 
 
 %changelog
+* Wed Dec  8 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.4-1
+- Release 2.53.4 to Fedora
+- Cherry pick for nvidia glvnd incompatibility
+
+* Thu Dec 02 2021 Ian Johnson <ian.johnson@canonical.com>
+- New upstream release 2.53.4
+ - devicestate: mock devicestate.MockTimeutilIsNTPSynchronized to
+   avoid host env leaking into tests
+ - timeutil: return NoTimedate1Error if it can't connect to the
+   system bus
+
+* Thu Dec 02 2021 Ian Johnson <ian.johnson@canonical.com>
+- New upstream release 2.53.3
+ - devicestate: Unregister deletes the device key pair as well
+ - daemon,tests: support forgetting device serial via API
+ - configcore: relax validation rules for hostname
+ - o/devicestate: introduce DeviceManager.Unregister
+ - packaging/ubuntu, packaging/debian: depend on dbus-session-bus
+   provider
+ - many: wait for up to 10min for NTP synchronization before
+   autorefresh
+ - interfaces/interfaces/scsi_generic: add interface for scsi generic
+   devices
+ - interfaces/microstack-support: set controlsDeviceCgroup to true
+ - interface/builtin/log_observe: allow to access /dev/kmsg
+ - daemon: write formdata file parts to snaps dir
+ - spread: run lxd tests with version from latest/edge
+ - cmd/libsnap-confine-private: fix snap-device-helper device allow
+   list modification on cgroup v2
+ - interfaces/builtin/dsp: add proc files for monitoring Ambarella
+   DSP firmware
+ - interfaces/builtin/dsp: update proc file accordingly
+
 * Mon Nov 29 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.53.2-2
 - Cherry-pick a fix for snap-device-helper (RHBZ#2025264)
 
