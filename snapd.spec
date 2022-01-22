@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.54.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -944,6 +944,9 @@ fi
 
 
 %changelog
+* Sat Jan 22 2022 Fedora Release Engineering <releng@fedoraproject.org> - 2.54.1-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_36_Mass_Rebuild
+
 * Mon Dec 27 2021 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.54.1-1
 - Release 2.54.1 to Fedora and EPEL
 - Fixes for RHBZ#2035664
