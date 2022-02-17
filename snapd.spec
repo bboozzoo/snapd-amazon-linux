@@ -85,13 +85,16 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.54.2
+Version:        2.54.3
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
+Patch0:         0001-data-selinux-update-the-policy-to-allow-creating-rem.patch
+Patch1:         0002-data-selinux-update-SELinux-policy-with-more-bpf-all.patch
+Patch2:         0003-data-selinux-snap-confine-may-getattr-device-nodes-w.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -207,16 +210,10 @@ the started snap applications.
 Summary:        SELinux module for snapd
 License:        GPLv2+
 BuildArch:      noarch
-BuildRequires:  selinux-policy, selinux-policy-devel
-Requires(post): selinux-policy-base >= %{_selinux_policy_version}
-Requires(post): policycoreutils
-%if 0%{?rhel} == 7
-Requires(post): policycoreutils-python
-%else
-Requires(post): policycoreutils-python-utils
-%endif
-Requires(pre):  libselinux-utils
-Requires(post): libselinux-utils
+BuildRequires:  selinux-policy
+BuildRequires:  selinux-policy-devel
+BuildRequires:  make
+%{?selinux_requires}
 
 %description selinux
 This package provides the SELinux policy module to ensure snapd
@@ -944,6 +941,16 @@ fi
 
 
 %changelog
+* Thu Feb 17 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.54.3-1
+- Release 2.54.3 to Fedora
+- Cherry pick SELinux policy fixes for RHBZ#1944390, RHBZ#2043160, RHBZ#2043161,
+  RHBZ#2046358, RHBZ#2046363, RHBZ#2046361, RHBZ#2046364, RHBZ#2046365,
+  RHBZ#2051594, RHBZ#2043902, RHBZ#1944390
+
+* Tue Feb 15 2022 Michael Vogt <michael.vogt@ubuntu.com>
+- New upstream release 2.54.3
+ - bugfixes
+
 * Tue Jan 25 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.54.2-1
 - Release 2.54.2 to Fedora
 
