@@ -16,6 +16,9 @@ build_in_container() {
 
     mkdir -p "$PWD/rpmbuild/SOURCES"
     cp -av snapd_*.*-vendor.tar.xz "$PWD/rpmbuild/SOURCES/"
+    find . -maxdepth 1 -name '*.patch' | while read -r name; do
+        cp -av "$name" "$PWD/rpmbuild/SOURCES"
+    done
     rpmbuild -ba -D "%_topdir $PWD/rpmbuild" ./snapd.spec
 }
 
