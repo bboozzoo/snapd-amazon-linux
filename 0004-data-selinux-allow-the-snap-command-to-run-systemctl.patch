@@ -1,0 +1,32 @@
+From e995e0fafe55d0b73889b3995bbd982f4b362307 Mon Sep 17 00:00:00 2001
+Message-Id: <e995e0fafe55d0b73889b3995bbd982f4b362307.1646984489.git.maciej.zenon.borzecki@canonical.com>
+From: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+Date: Wed, 23 Feb 2022 07:32:45 +0100
+Subject: [PATCH] data/selinux: allow the snap command to run systemctl
+
+Which can happen when there is a system key mismatch. Caught in the wild on
+Fedora.
+
+Fixes: https://bugzilla.redhat.com/show_bug.cgi?id=2057103
+
+Signed-off-by: Maciej Borzecki <maciej.zenon.borzecki@canonical.com>
+---
+ data/selinux/snappy.te | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/data/selinux/snappy.te b/data/selinux/snappy.te
+index cc6ba5b14b306977eaa555b35d803637c2f5aa3e..c79f789ab00d4bc7e996606d4d63db2ac78d7ebd 100644
+--- a/data/selinux/snappy.te
++++ b/data/selinux/snappy.te
+@@ -805,6 +805,8 @@ can_exec(snappy_cli_t, snappy_exec_t)
+ fs_getattr_tmpfs(snappy_cli_t)
+ fs_getattr_cgroup(snappy_cli_t)
+ 
++# execute systemctl is-system-running when system-key mismatch is detected
++systemd_exec_systemctl(snappy_cli_t)
+ 
+ ########################################
+ #
+-- 
+2.35.1
+

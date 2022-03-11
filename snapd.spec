@@ -85,7 +85,7 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.54.3
+Version:        2.54.4
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
@@ -95,6 +95,7 @@ Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_
 Patch0:         0001-data-selinux-update-the-policy-to-allow-creating-rem.patch
 Patch1:         0002-data-selinux-update-SELinux-policy-with-more-bpf-all.patch
 Patch2:         0003-data-selinux-snap-confine-may-getattr-device-nodes-w.patch
+Patch3:         0004-data-selinux-allow-the-snap-command-to-run-systemctl.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -941,6 +942,47 @@ fi
 
 
 %changelog
+* Fri Mar 11 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.54.4-1
+- Release 2.54.4 to Fedora
+  - Includes a fix for RHBZ#2062678
+- Cherry pick a fix for RHBZ#2057103
+
+* Thu Mar 03 2022 Michael Vogt <michael.vogt@ubuntu.com>
+- New upstream release 2.54.4
+ - t/m/interfaces-network-manager: use different channel depending on
+   system
+ - many: backport attrer interface changes to 2.54
+ - tests: skip version check on lp-1871652 for sru validation
+ - i/builtin: allow modem-manager interface to access some files in
+   sysfs
+ - snapstate: make "remove vulnerable version" message more
+   friendly
+ - tests: fix "undo purging" step in snap-run-devmode-classic
+ - o/snapstate: deal with potentially invalid type of refresh.retain
+   value due to lax validation
+ - interfaces: custom-device
+ - packaging/ubuntu-16.04/control: adjust libfuse3 dependency
+ - data/env: fix fish env for all versions of fish
+ - packaging/ubuntu-16.04/snapd.postinst: start socket and service
+   first
+ - interfaces/u2f-devices: add U2F-TOKEN
+ - interfaces/seccomp: Add rseq to base seccomp template
+ - tests: remove disabled snaps before calling save_snapd_state
+ - overlord: skip manager tests on riscv for now
+ - interfaces/opengl: add support for ARM Mali
+ - devicestate: ensure permissions of /var/lib/snapd/void are
+   correct
+ - cmd/snap-update-ns: convert some unexpected decimal file mode
+   constants to octal.
+ - interfaces/shared-memory: support single wild-cards in the
+   read/write paths
+ - packaging: fix running autopkgtest
+ - i/builtin/xilinx-dma-host: add interface for Xilinx DMA driver
+ - tests: fix `tests/core/create-user` on testflinger pi3
+ - tests: fix parallel-install-basic on external UC16 devices
+ - tests: re-enable kernel-module-load tests on arm
+ - tests: do not run k8s smoke test on 32 bit systems
+
 * Thu Feb 17 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.54.3-1
 - Release 2.54.3 to Fedora
 - Cherry pick SELinux policy fixes for RHBZ#1944390, RHBZ#2043160, RHBZ#2043161,
