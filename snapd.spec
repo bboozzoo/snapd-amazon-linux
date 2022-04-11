@@ -85,13 +85,14 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.55.2
+Version:        2.55.3
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
+Patch0:         0001-data-selinux-allow-snap-update-ns-to-mount-on-top-of.patch
 
 %if 0%{?with_goarches}
 # e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
@@ -936,6 +937,57 @@ fi
 
 
 %changelog
+* Mon Apr 11 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.55.3-1
+- Release 2.55.3 to Fedora
+
+* Fri Apr 08 2022 Michael Vogt <michael.vogt@ubuntu.com>
+- New upstream release 2.55.3
+ - cmd/snap-update-ns: apply content mounts before layouts
+ - many: change "transactional" flag to a "transaction" option
+ - b/piboot.go: check EEPROM version for RPi4
+ - snap/quota,spread: raise lower memory quota limit to 640kb
+ - boot,bootloader: add missing grub.cfg assets mocks in some
+   tests
+ - many: support --ignore-running with refresh many
+ - cmd/snap,wrappers: fix wrong implementation of zero count cpu
+   quota
+ - quota: add some more unit tests around Resource.Change()
+ - quota: detect/error if cpu-set is used with cgroup v1
+ - quota: add test for `Resource.clone()
+ - cmd/snap,client: frontend for cpu/thread quotas
+ - tests: update spread test to check right XDG dirs
+ - snap: set XDG env vars to new dirs
+ - o/snapstate: initialize XDG dirs in HOME migration
+ - i/b/kernel_module_load: expand $SNAP_COMMON in module options
+ - overlord: add missing grub.cfg assets mocks in manager_tests.go
+ - o/snapstate: account for repeat migration in ~/Snap undo
+ - b/a: do not set console in kernel command line for arm64
+ - sandbox: improve error message from `ProbeCgroupVersion()`
+ - tests/main/snap-quota-groups: fix spread test
+ - interfaces: add pkcs11 interface
+ - o/snapstate: undo migration on 'snap revert'
+ - overlord: snapshot exclusions
+ - interfaces: add private /dev/shm support to shared-memory
+   interface
+ - packaging: install Go snap from 1.17 channel in the integration
+   tests
+ - snap-exec: fix detection if `cups` interface is connected
+ - bootloader/piboot: add support for armhf
+ - interfaces/system-packages-doc: allow read-only access to
+   /usr/share/libreoffice/help
+ - daemon: add a /v2/accessories/changes/{ID} endpoint
+ - interfaces/appstream-metadata: Re-create app-info links to
+   swcatalog
+ - tests/main/snap-quota-groups: add 219 as possible exit code
+ - store: set validation-sets on actions when refreshing
+ - interfaces/appstream-metadata: Support new swcatalog directory
+   names
+ - asserts,interfaces/policy: slot-snap-id allow-installation
+   constraints
+ - i/b/network-manager: change rule for ResolveAddress to check only
+   label
+ - cmd/snap-bootstrap: support booting into factory-reset mode
+ - systemd: do not reload system when enabling/disabling services
 
 * Wed Apr 6 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.55.2-1
 - Release 2.55.2 to Fedora
