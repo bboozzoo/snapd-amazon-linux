@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.55.3
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -937,6 +937,9 @@ fi
 
 
 %changelog
+* Fri Apr 15 2022 David King <amigadave@amigadave.com> - 2.55.3-2
+- Rebuild against selinux-policy (#2070729)
+
 * Mon Apr 11 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.55.3-1
 - Release 2.55.3 to Fedora
 
