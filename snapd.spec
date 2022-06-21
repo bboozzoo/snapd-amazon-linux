@@ -1279,6 +1279,9 @@ fi
    inside the mount ns
  - interfaces/cpu-control: fix apparmor rules of paths with CPU ID
 
+* Fri Apr 15 2022 David King <amigadave@amigadave.com> - 2.55.3-2
+- Rebuild against selinux-policy (#2070729)
+
 * Mon Apr 11 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.55.3-1
 - Release 2.55.3 to Fedora
 
