@@ -16,9 +16,6 @@
 %global with_unit_test 0
 %global with_test_keys 0
 
-# For the moment, we don't support all golang arches...
-%global with_goarches 0
-
 # Set if multilib is enabled for supported arches
 %ifarch x86_64 aarch64 %{power64} s390x
 %global with_multilib 1
@@ -86,20 +83,14 @@
 
 Name:           snapd
 Version:        2.56.2
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
 
-%if 0%{?with_goarches}
-# e.g. el6 has ppc64 arch without gcc-go, so EA tag is required
-ExclusiveArch:  %{?go_arches:%{go_arches}}%{!?go_arches:%{ix86} x86_64 %{arm}}
-%else
-# Verified arches from snapd upstream
-ExclusiveArch:  %{ix86} x86_64 %{arm} aarch64 ppc64le s390x
-%endif
+ExclusiveArch:  %{?golang_arches}%{!?golang_arches:%{ix86} x86_64 %{arm} aarch64 ppc64le s390x}
 
 # If go_compiler is not set to 1, there is no virtual provide. Use golang instead.
 BuildRequires: make
@@ -936,6 +927,10 @@ fi
 
 
 %changelog
+* Mon Jul 04 2022 Maxwell G <gotmax@e.email> - 2.56.2-2
+- Only build on %%golang_arches (i.e. where golang is available).
+- Rebuild to fix update ordering issues.
+
 * Sat Jul 09 2022 Maxwell G <gotmax@e.email> - 2.56.2-2
 - Rebuild for CVE-2022-{24675,28327,29526 in golang}
 
