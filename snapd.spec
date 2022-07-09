@@ -86,7 +86,7 @@
 
 Name:           snapd
 Version:        2.56.2
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -936,6 +936,9 @@ fi
 
 
 %changelog
+* Sat Jul 09 2022 Maxwell G <gotmax@e.email> - 2.56.2-2
+- Rebuild for CVE-2022-{24675,28327,29526 in golang}
+
 * Tue Jun 21 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.56.2-1
 - Release 2.56.2 to Fedora and EPEL
 
