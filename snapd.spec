@@ -927,7 +927,7 @@ fi
 
 
 %changelog
-* Mon Jul 04 2022 Maxwell G <gotmax@e.email> - 2.56.2-2
+* Sun Jul 10 2022 Maxwell G <gotmax@e.email> - 2.56.2-2
 - Only build on %%golang_arches (i.e. where golang is available).
 - Rebuild to fix update ordering issues.
 
