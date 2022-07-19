@@ -83,7 +83,7 @@
 
 Name:           snapd
 Version:        2.56.2
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -927,6 +927,10 @@ fi
 
 
 %changelog
+* Tue Jul 19 2022 Maxwell G <gotmax@e.email> - 2.56.2-4
+- Rebuild for CVE-2022-{1705,32148,30631,30633,28131,30635,30632,30630,1962} in
+  golang
+
 * Sun Jul 10 2022 Maxwell G <gotmax@e.email> - 2.56.2-2
 - Only build on %%golang_arches (i.e. where golang is available).
 - Rebuild to fix update ordering issues.
