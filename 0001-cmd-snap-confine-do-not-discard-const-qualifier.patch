@@ -1,0 +1,35 @@
+From 51c27ea0c71a1737607b21bf9de3cc91cf690ebd Mon Sep 17 00:00:00 2001
+Message-Id: <51c27ea0c71a1737607b21bf9de3cc91cf690ebd.1669579092.git.maciek.borzecki@gmail.com>
+From: Maciej Borzecki <maciek.borzecki@gmail.com>
+Date: Sun, 27 Nov 2022 20:47:29 +0100
+Subject: [PATCH] cmd/snap-confine: do not discard const qualifier
+
+GCC 12.2.1 with the default build flags in Rawhide is more picky than usual, and
+fails with this:
+
+snap-confine/selinux-support.c:85:29: error: initialization discards 'const' qualifier from pointer target type [-Werror=discarded-qualifiers]
+   85 |         char *new_ctx_str = context_str(ctx);
+      |                             ^~~~~~~~~~~
+cc1: all warnings being treated as errors
+
+Signed-off-by: Maciej Borzecki <maciek.borzecki@gmail.com>
+---
+ cmd/snap-confine/selinux-support.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmd/snap-confine/selinux-support.c b/cmd/snap-confine/selinux-support.c
+index 344a3444b23d10afa408d2f1390156b44506ebc8..a65c02632968ac0f8f23d1bd4b7045a5206b59d9 100644
+--- a/cmd/snap-confine/selinux-support.c
++++ b/cmd/snap-confine/selinux-support.c
+@@ -82,7 +82,7 @@ int sc_selinux_set_snap_execcon(void) {
+         }
+ 
+         /* freed by context_free(ctx) */
+-        char *new_ctx_str = context_str(ctx);
++        const char *new_ctx_str = context_str(ctx);
+         if (new_ctx_str == NULL) {
+             die("cannot obtain updated SELinux context string");
+         }
+-- 
+2.38.1
+
