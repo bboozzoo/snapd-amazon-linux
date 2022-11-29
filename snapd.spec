@@ -82,7 +82,7 @@
 %{!?_systemd_system_env_generator_dir: %global _systemd_system_env_generator_dir %{_prefix}/lib/systemd/system-environment-generators}
 
 Name:           snapd
-Version:        2.57.5
+Version:        2.57.6
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
@@ -652,6 +652,7 @@ popd
 pushd ./data
 %make_install BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}" DATADIR="%{_datadir}" \
               SYSTEMDSYSTEMUNITDIR="%{_unitdir}" SYSTEMDUSERUNITDIR="%{_userunitdir}" \
+              TMPFILESDIR="%{_tmpfilesdir}" \
               SNAP_MOUNT_DIR="%{_sharedstatedir}/snapd/snap" \
               SNAPD_ENVIRONMENT_FILE="%{_sysconfdir}/sysconfig/snapd"
 popd
@@ -785,6 +786,7 @@ popd
 %{_unitdir}/snapd.seeded.service
 %{_userunitdir}/snapd.session-agent.service
 %{_userunitdir}/snapd.session-agent.socket
+%{_tmpfilesdir}/snapd.conf
 %{_datadir}/dbus-1/services/io.snapcraft.Launcher.service
 %{_datadir}/dbus-1/services/io.snapcraft.SessionAgent.service
 %{_datadir}/dbus-1/services/io.snapcraft.Settings.service
@@ -934,8 +936,12 @@ fi
 
 
 %changelog
-* Sun Nov 27 2022 Maciek Borzecki <maciek@sloop> - 2.57.5-1
-- Release 2.57.5 to Fedora
+* Wed Nov 30 2022 Maciek Borzecki <maciek.borzecki@gmail.com>
+- Release 2.57.6 to Fedora
+
+* Tue Nov 15 2022 Michael Vogt <michael.vogt@ubuntu.com>
+- New upstream release 2.57.6
+ - bugfixes
 
 * Mon Oct 17 2022 Michael Vogt <michael.vogt@ubuntu.com>
 - New upstream release 2.57.5
