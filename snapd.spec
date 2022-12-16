@@ -83,7 +83,7 @@
 
 Name:           snapd
 Version:        2.57.6
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -515,8 +515,9 @@ BUILDTAGS="${BUILDTAGS} nomanagers"
 # To ensure things work correctly with base snaps,
 # snap-exec, snap-update-ns, and snapctl need to be built statically
 (
-%if 0%{?rhel} >= 8
-    # since 1.12.1, the go-toolset module is built with FIPS compliance that
+%if 0%{?rhel} >= 7
+    # since RH Developer tools 2018.4 (and later releases),
+    # the go-toolset module is built with FIPS compliance that
     # defaults to using libcrypto.so which gets loaded at runtime via dlopen(),
     # disable that functionality for statically built binaries
     BUILDTAGS="${BUILDTAGS} no_openssl"
@@ -936,7 +937,10 @@ fi
 
 
 %changelog
-* Wed Nov 30 2022 Maciek Borzecki <maciek.borzecki@gmail.com>
+* Fri Dec 16 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.57.6-2
+- Fix for RHBZ#2152903
+
+* Wed Nov 30 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.57.6-1
 - Release 2.57.6 to Fedora
 
 * Tue Nov 15 2022 Michael Vogt <michael.vogt@ubuntu.com>
