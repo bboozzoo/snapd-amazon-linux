@@ -83,7 +83,7 @@
 
 Name:           snapd
 Version:        2.57.6
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -937,6 +937,9 @@ fi
 
 
 %changelog
+* Sat Jan 21 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.57.6-3
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_38_Mass_Rebuild
+
 * Fri Dec 16 2022 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.57.6-2
 - Fix for RHBZ#2152903
 
