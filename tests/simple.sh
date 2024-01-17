@@ -4,6 +4,8 @@ set -ex
 
 # snapd should get activated
 snap list
+# wait for snapd to be operational
+snap wait system seed.loaded
 # install a snap
 snap install test-snapd-tools
 # run an app from that snap
