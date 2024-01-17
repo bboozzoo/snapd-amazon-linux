@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.58.3
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -110,6 +110,11 @@ Requires:       fuse
 %else
 # snapd will use squashfuse in the event that squashfs.ko isn't available (cloud instances, containers, etc.)
 Requires:       ((squashfuse and fuse) or kmod(squashfs.ko))
+%endif
+
+# Require xdelta for delta updates of snap packages.
+%if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} > 8 )
+Requires:       xdelta
 %endif
 
 # bash-completion owns /usr/share/bash-completion/completions
@@ -940,6 +945,9 @@ fi
 
 
 %changelog
+* Wed Jan 17 2024 Zygmunt Krynicki <me@zygoon.pl> - 2.58.3-3
+- Require xdelta on Fedora or EPEL >= 9 (for delta updates)
+
 * Sat Jul 22 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.58.3-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
 
