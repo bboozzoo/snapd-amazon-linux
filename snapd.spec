@@ -945,6 +945,12 @@ fi
 
 
 %changelog
+* Thu Jan 18 2024 Zygmunt Krynicki <me@zygoon.pl> - 2.61.1-1
+- Changelog resynchronization
+
+* Wed Jan 17 2024 Zygmunt Krynicki <me@zygoon.pl> - 2.58.3-3
+- Require xdelta on Fedora or EPEL >= 9 (for delta updates)
+
 * Fri Nov 24 2023 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.61.1
  - Stop requiring default provider snaps on image building and first
@@ -1095,9 +1101,6 @@ fi
  - prepare-image now takes into account snapd versions going into
    the image, including in the kernel initrd, to fetch supported
    assertion formats
-
-* Wed Jan 17 2024 Zygmunt Krynicki <me@zygoon.pl> - 2.58.3-3
-- Require xdelta on Fedora or EPEL >= 9 (for delta updates)
 
 * Sat Jul 22 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.58.3-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
