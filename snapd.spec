@@ -1019,6 +1019,9 @@ fi
  - cmd/snap: hide append-integrity-data
  - interfaces/opengl: add support for ARM Mali
 
+* Sat Jul 22 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.58.3-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
+
 * Tue Jul 04 2023 Michael Vogt <michael.vogt@ubuntu.com>
 - New upstream release 2.60.1
  - install: fallback to lazy unmount() in writeFilesystemContent
@@ -1101,9 +1104,6 @@ fi
  - prepare-image now takes into account snapd versions going into
    the image, including in the kernel initrd, to fetch supported
    assertion formats
-
-* Sat Jul 22 2023 Fedora Release Engineering <releng@fedoraproject.org> - 2.58.3-2
-- Rebuilt for https://fedoraproject.org/wiki/Fedora_39_Mass_Rebuild
 
 * Sat Feb 25 2023 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.58.3-1
 - Releate 2.58.3 to Fedora RHBZ#2173056
