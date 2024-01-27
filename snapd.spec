@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.61.1
-Release:        0%{?dist}
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -945,6 +945,9 @@ fi
 
 
 %changelog
+* Sat Jan 27 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.61.1-1
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
+
 * Thu Jan 18 2024 Zygmunt Krynicki <me@zygoon.pl> - 2.61.1-1
 - Changelog resynchronization
 
