@@ -996,6 +996,9 @@ fi
 
 
 %changelog
+* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.amzn2.1
+- Rebuild for Amazon Linux 2
+
 * Sat Jan 27 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.61.1-1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild
 
