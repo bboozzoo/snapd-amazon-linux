@@ -1,0 +1,21 @@
+summary: build package and a repository
+
+artifacts:
+  - rpmbuild/RPMS
+  - rpmbuild/SRPMS
+  - rpmbuild/SOURCES
+  - amazon-linux-2-repo.tar.xz
+
+prepare: |
+  yum-builddep -y "$PWD/snapd.spec"
+
+execute: |
+  # shellcheck disable=SC2046
+  wget $(rpmspec -P "$SPREAD_PATH/snapd.spec" | awk '/^Source[0-9]+: +https:/ { print $2 }')
+  cp -av "$SPREAD_PATH/snapd.spec" .
+  rpmspec -P "$SPREAD_PATH/snapd.spec" | awk '/^Patch[0-9]+: +https:/ { print $2 }' | while read -r pname ; do
+    cp -av "$SPREAD_PATH/$pname" .
+  done
+  IN_CONTAINER=1 "$SPREAD_PATH/tool" build
+  IN_CONTAINER=1 "$SPREAD_PATH/tool" createrepo
+  tar -cJv repo > amazon-linux-2-repo.tar.xz

@@ -1,0 +1,74 @@
+project: snapd-amazon-linux
+
+path: /home/spread
+
+environment:
+    TESTSLIB: /home/spread/spread/tests/lib
+    PATH: $PATH:/home/spread/spread/tests/lib/bin
+    LANG: "C.UTF-8"
+    LANGUAGE: "en"
+
+backends:
+    google:
+        key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
+        location: snapd-spread/us-east1-b
+        halt-timeout: 2h
+        systems:
+            - amazon-linux-2-64:
+                  workers: 1
+                  storage: preserve-size
+            - amazon-linux-2023-64:
+                  workers: 1
+                  storage: preserve-size
+
+    qemu:
+        systems:
+            - amazon-linux-2-64:
+                  username: ec2-user
+                  password: amazon
+            - amazon-linux-2023-64:
+                  username: ec2-user
+                  password: amazon
+
+path: /home/spread
+
+exclude:
+    - .git
+
+kill-timeout: 20m
+
+prepare: |
+  yum install -y yum-utils rpm-build
+  echo "prepare"
+
+prepare-each: |
+  echo "prepare each"
+
+restore: |
+  echo "restore"
+restore-each: |
+  echo "restore each"
+
+suites:
+  spread/prebuilt/:
+    summary: run tests with prebuilt packages
+    prepare: |
+      # set up a place to unpack the repo
+      mkdir -p "$SPREAD_PATH/repo-unpacked"
+      tar -C "$SPREAD_PATH/repo-unpacked" -xvf "$SPREAD_PATH/amazon-linux-2-repo.tar.xz"
+      # unpack it, the actual repository is under $TOPDIR/repo
+      "$SPREAD_PATH/tool" repoconf "file://$SPREAD_PATH/repo-unpacked/repo" > "$SPREAD_PATH/spread.repo"
+      cp -av "$SPREAD_PATH/spread.repo" /etc/yum.repos.d/
+      # install snapd
+      yum install -y snapd
+      systemctl start snapd.socket
+      # wait for snapd to become ready
+      snap wait system seed.loaded
+
+    restore: |
+      yum erase -y snapd snap-confine
+      rm -f /etc/yum.repos.d/spread.repo
+      rm -rfv "$SPREAD_PATH/repo-unpacked"
+
+  spread/build/:
+    summary: package build
