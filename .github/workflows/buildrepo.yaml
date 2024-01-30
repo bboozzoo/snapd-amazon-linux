@@ -64,6 +64,7 @@ jobs:
       with:
         name: ${{ matrix.artifact_name }}
         path: "amazon-linux-*-repo*.tar.xz"
+        retention-days: 1
 
   deploy:
     needs:
