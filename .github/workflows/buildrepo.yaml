@@ -7,8 +7,16 @@ on:
 
 jobs:
   build-repo-job:
+    strategy:
+      matrix:
+        target: ["amazonlinux:2", "amazonlinux:2023"]
+        include:
+          - target: amazonlinux:2
+            artifact_name: repo-tarball-amazonlinux-2
+          - target: amazonlinux:2023
+            artifact_name: repo-tarball-amazonlinux-2023
     runs-on: ubuntu-latest
-    container: amazonlinux:2
+    container: ${{ matrix.target }}
     steps:
     - name: Install git
       run: |
@@ -21,9 +29,21 @@ jobs:
     - name: Build repository tarball
       run: |
         IN_CONTAINER=1 ./tool createrepo
-        tar -cJv repo > amazon-linux-2-repo.tar.xz
+        case ${{ matrix.target }} in
+        amazonlinux:2)
+            repo_file=amazon-linux-2-repo.tar.xz
+            ;;
+        amazonlinux:2023)
+            repo_file=amazon-linux-2023-repo.tar.xz
+            ;;
+        *)
+            echo "unsupported target ${{ matrix.target }}"
+            exit 1
+            ;;
+        esac
+        tar -cJv repo > "$repo_file"
     - name: Uploading repository tarball
       uses: actions/upload-artifact@v2
       with:
-        name: repo-tarball
-        path: "amazon-linux-2-repo*.tar.xz"
+        name: ${{ matrix.artifact_name }}
+        path: "amazon-linux-*-repo*.tar.xz"
