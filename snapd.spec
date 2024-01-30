@@ -102,7 +102,7 @@
 
 Name:           snapd
 Version:        2.61.1
-Release:        1%{?dist}.2
+Release:        1%{?dist}.3
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -135,7 +135,9 @@ Requires:       ((squashfuse and fuse) or kmod(squashfs.ko))
 
 # Require xdelta for delta updates of snap packages.
 %if 0%{?fedora} || ( 0%{?rhel} && 0%{?rhel} > 8 )
+%if ! 0%{?amzn2023}
 Requires:       xdelta
+%endif
 %endif
 
 # bash-completion owns /usr/share/bash-completion/completions
@@ -997,6 +999,9 @@ fi
 
 
 %changelog
+* Tue Jan 30 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.%{dist}.3
+- Drop dependency on xdelta where on target where it is not available
+
 * Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.%{dist}.2
 - Refine packaging for Amazon Linux 2023
 
