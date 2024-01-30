@@ -64,6 +64,7 @@ jobs:
       with:
         name: ${{ matrix.artifact_name }}
         path: "amazon-linux-*-repo*.tar.xz"
+        retention-days: 1
 
   deploy:
     needs:
@@ -76,17 +77,14 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: repo-tarball-amazonlinux-2
-          path: repo/amzn2
-      - uses: actions/download-artifact@v4
-        with:
-          name: repo-tarball-amazonlinux-2023
-          path: repo/al2023
+      - uses: actions/download-artifact@v3
 
-      - name: Show the artifacts
+      - name: Prepare the artifacts
         run: |
+          find . -ls
+          mkdir -p repo/amzn2 repo/al2023
+          tar -C repo/amzn2 --strip-components=1 -xvf repo-tarball-amazonlinux-2/amazon-linux-2-repo.tar.xz
+          tar -C repo/al2023 --strip-components=1 -xvf repo-tarball-amazonlinux-2023/amazon-linux-2023-repo.tar.xz
           find repo/ -ls
 
       - name: Upload artifact
