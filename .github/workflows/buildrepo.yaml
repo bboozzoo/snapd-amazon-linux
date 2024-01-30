@@ -1,26 +1,14 @@
-name: Build repository
+name: Build repository from PRs
 on:
   pull_request:
     branches: [ "master"]
-  push:
-    branches: [ "master" ]
-
-  workflow_dispatch:
-    inputs:
-      skip_upload:
-        required: false
-        description: "Skip upload"
-        type: boolean
-        default: false
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "packaging"
-  cancel-in-progress: false
+  group: ${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+env:
+  BASE_REPO_URL: https://bboozzoo.github.io/snapd-amazon-linux
 
 jobs:
   build-repo:
@@ -29,9 +17,14 @@ jobs:
         target: ["amazonlinux:2", "amazonlinux:2023"]
         include:
           - target: amazonlinux:2
+            repo_tarball_name: amazon-linux-2-repo.tar.xz
             artifact_name: repo-tarball-amazonlinux-2
+            repo_url_suffix: amzn2
           - target: amazonlinux:2023
+            repo_tarball_name: amazon-linux-2023-repo.tar.xz
             artifact_name: repo-tarball-amazonlinux-2023
+            repo_url_suffix: al2023
+
     runs-on: ubuntu-latest
     container: ${{ matrix.target }}
     steps:
@@ -40,61 +33,11 @@ jobs:
         yum install git -y
     - name: Checkout code
       uses: actions/checkout@v3
-    - name: Build RPM packages
-      run: |
-        IN_CONTAINER=1 ./tool build
-    - name: Build repository tarball
-      run: |
-        IN_CONTAINER=1 ./tool createrepo
-        case ${{ matrix.target }} in
-        amazonlinux:2)
-            repo_file=amazon-linux-2-repo.tar.xz
-            ;;
-        amazonlinux:2023)
-            repo_file=amazon-linux-2023-repo.tar.xz
-            ;;
-        *)
-            echo "unsupported target ${{ matrix.target }}"
-            exit 1
-            ;;
-        esac
-        tar -cJv repo > "$repo_file"
-    - name: Uploading repository tarball
-      uses: actions/upload-artifact@v3
+    - name: Build repository artifacts
+      id: build-repo
+      uses: "./.github/actions/build-repo"
       with:
-        name: ${{ matrix.artifact_name }}
-        path: "amazon-linux-*-repo*.tar.xz"
-        retention-days: 1
-
-  deploy:
-    needs:
-      - build-repo
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - uses: actions/download-artifact@v3
-
-      - name: Prepare the artifacts
-        run: |
-          find . -ls
-          mkdir -p repo/amzn2 repo/al2023
-          tar -C repo/amzn2 --strip-components=1 -xvf repo-tarball-amazonlinux-2/amazon-linux-2-repo.tar.xz
-          tar -C repo/al2023 --strip-components=1 -xvf repo-tarball-amazonlinux-2023/amazon-linux-2023-repo.tar.xz
-          find repo/ -ls
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # Upload entire repository
-          path: 'repo/'
-
-      - name: Deploy to GitHub Pages
-        # only on master or manual trigger
-        if: ${{ contains(fromJSON('["push", "workflow_dispatch"]'), github.event_name) && !inputs.skip_upload }}
-        id: deployment
-        uses: actions/deploy-pages@v4
+        target: ${{ matrix.target }}
+        repo_tarball_name: ${{ matrix.repo_tarball_name }}
+        repo_artifact_name: ${{ matrix.artifact_name }}
+        repo_url: ${{ env.BASE_REPO_URL }}/${{ matrix.repo_url_suffix }}
