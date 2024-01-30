@@ -52,6 +52,7 @@ spin_container() {
     fi
     # run a container, mount sources at /mnt, st
     "$engine" run --rm \
+              --ulimit nofile=1024:4096 \
               -v "$PWD":/mnt \
               -w /mnt \
               -e IN_CONTAINER=1 \
