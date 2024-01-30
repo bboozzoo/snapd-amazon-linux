@@ -13,6 +13,23 @@ is initialized under `$PWD/repo`.
 
 Use `tool repoconf <$baseurl>` to generate a suitable yum `*.repo` file.
 
+The `TARGET` environment variable needs to be set when then invoking the `tool`
+command.
+
+Build and create repository for Amazon Linux 2:
+
+```sh
+TARGET=amazonlinux:2 ./tool build
+TARGET=amazonlinux:2 ./tool createrepo
+```
+
+Build and create repository for Amazon Linux 2023:
+
+```sh
+TARGET=amazonlinux:2023 ./tool build
+TARGET=amazonlinux:2023 ./tool createrepo
+```
+
 #### Packaging
 
 The package uses the Fedora/EPEL package as base

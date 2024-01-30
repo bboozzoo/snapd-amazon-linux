@@ -1,6 +1,7 @@
 # With Fedora, nothing is bundled. For everything else, bundling is used.
+# Amazon-linux 2023 sets 'fedora', but we still bundle everything.
 # To use bundled stuff, use "--with vendorized" on rpmbuild
-%if 0%{?fedora}
+%if 0%{?fedora} && ! 0%{?amzn2023}
 %bcond_with vendorized
 %else
 %bcond_without vendorized
@@ -66,7 +67,7 @@
 
 # Until we have a way to add more extldflags to gobuild macro...
 # Always use external linking when building static binaries.
-%if 0%{?fedora} || 0%{?rhel} >= 8
+%if 0%{?fedora} || 0%{?rhel} >= 8 || 0%{?amzn2023}
 %define gobuild_static(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
 %endif
 %if 0%{?rhel} == 7
@@ -75,7 +76,7 @@
 %endif
 
 # These macros are missing BUILDTAGS in RHEL 8/9, see RHBZ#1825138
-%if 0%{?rhel} >= 8
+%if 0%{?rhel} >= 8 || 0%{?amzn2023}
 %define gobuild(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags'" -a -v -x %{?**};
 %endif
 
@@ -101,7 +102,7 @@
 
 Name:           snapd
 Version:        2.61.1
-Release:        1%{?dist}.1
+Release:        1%{?dist}.2
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -214,7 +215,7 @@ BuildRequires:  libseccomp-static
 BuildRequires:  valgrind
 %endif
 BuildRequires:  %{_bindir}/rst2man
-%if 0%{?fedora}
+%if 0%{?fedora} && ! 0%{?amzn2023}
 # ShellCheck in EPEL is too old...
 BuildRequires:  %{_bindir}/shellcheck
 %endif
@@ -996,8 +997,11 @@ fi
 
 
 %changelog
-* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.amzn2.1
-- Rebuild for Amazon Linux 2
+* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.%{dist}.2
+- Refine packaging for Amazon Linux 2023
+
+* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.%{dist}.1
+- Rebuild for Amazon Linux
 
 * Sat Jan 27 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.61.1-1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_40_Mass_Rebuild

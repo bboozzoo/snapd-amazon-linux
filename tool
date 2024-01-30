@@ -1,7 +1,16 @@
 #!/bin/bash
 
 RUNTIME=${RUNTIME:-docker}
-DOCKER_IMG=amazonlinux:2
+if [ "${IN_CONTAINER-0}" = "0" ] && [ -z "$TARGET" ]; then
+    (
+    echo "TARGET is unset"
+    echo "use:"
+    echo "  - amazonlinux:2"
+    echo "  - amazonlinux:2023"
+    ) >&2
+    exit 1
+fi
+DOCKER_IMG=${TARGET}
 
 
 #HELP: tool - a silly tool to build snapd for Amazon Linux 2
@@ -25,7 +34,7 @@ build_in_container() {
 #HELP:     createrepo
 #HELP:              generate a YUM repository structure under $PWD/repo
 createrepo_in_container() {
-    yum install -y createrepo
+    yum install -y createrepo /usr/bin/find
 
     mkdir -p "$PWD/repo/sources/packages"
     mkdir -p "$PWD/repo/x86_64/packages"
@@ -43,6 +52,7 @@ spin_container() {
     fi
     # run a container, mount sources at /mnt, st
     "$engine" run --rm \
+              --ulimit nofile=1024:4096 \
               -v "$PWD":/mnt \
               -w /mnt \
               -e IN_CONTAINER=1 \
@@ -62,14 +72,14 @@ make_repo_file() {
     fi
     url="$1"
     cat <<EOF
-[snapd-amzn2]
-name=snapd packages for Amazon Linux 2
+[snapd-amzn]
+name=snapd packages for Amazon Linux
 baseurl=$url/\$basearch
 gpgcheck=0
 enabled=1
 
-[snapd-amzn2-sources]
-name=snapd packages for Amazon Linux 2
+[snapd-amzn-sources]
+name=snapd packages for Amazon Linux
 baseurl=$url/sources
 gpgcheck=0
 enabled=0
