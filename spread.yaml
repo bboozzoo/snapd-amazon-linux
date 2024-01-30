@@ -55,9 +55,23 @@ suites:
     prepare: |
       # set up a place to unpack the repo
       mkdir -p "$SPREAD_PATH/repo-unpacked"
-      tar -C "$SPREAD_PATH/repo-unpacked" -xvf "$SPREAD_PATH/amazon-linux-2-repo.tar.xz"
+      case "$SPREAD_SYSTEM" in
+      amazon-linux-2-*)
+          repo_file=amazon-linux-2-repo.tar.xz
+          target=amazonlinux:2
+          ;;
+      amazon-linux-2023-*)
+          repo_file=amazon-linux-2023-repo.tar.xz
+          target=amazonlinux:2023
+          ;;
+      *)
+          echo "unsupported $SPREAD_SYSTEM system"
+          exit 1
+          ;;
+      esac
+      tar -C "$SPREAD_PATH/repo-unpacked" -xvf "$SPREAD_PATH/$repo_file"
       # unpack it, the actual repository is under $TOPDIR/repo
-      "$SPREAD_PATH/tool" repoconf "file://$SPREAD_PATH/repo-unpacked/repo" > "$SPREAD_PATH/spread.repo"
+      TARGET="$target" "$SPREAD_PATH/tool" repoconf "file://$SPREAD_PATH/repo-unpacked/repo" > "$SPREAD_PATH/spread.repo"
       cp -av "$SPREAD_PATH/spread.repo" /etc/yum.repos.d/
       # install snapd
       yum install -y snapd
