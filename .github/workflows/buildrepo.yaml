@@ -78,13 +78,6 @@ jobs:
         uses: actions/configure-pages@v4
 
       - uses: actions/download-artifact@v3
-        with:
-          name: repo-tarball-amazonlinux-2
-          path: repo/amzn2
-      - uses: actions/download-artifact@v3
-        with:
-          name: repo-tarball-amazonlinux-2023
-          path: repo/al2023
 
       - name: Show the artifacts
         run: |
