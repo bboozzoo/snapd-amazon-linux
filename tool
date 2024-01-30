@@ -1,7 +1,16 @@
 #!/bin/bash
 
 RUNTIME=${RUNTIME:-docker}
-DOCKER_IMG=amazonlinux:2
+if [ "${IN_CONTAINER-0}" = "0" ] && [ -z "$TARGET" ]; then
+    (
+    echo "TARGET is unset"
+    echo "use:"
+    echo "  - amazonlinux:2"
+    echo "  - amazonlinux:2023"
+    ) >&2
+    exit 1
+fi
+DOCKER_IMG=${TARGET}
 
 
 #HELP: tool - a silly tool to build snapd for Amazon Linux 2
