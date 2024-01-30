@@ -34,7 +34,7 @@ build_in_container() {
 #HELP:     createrepo
 #HELP:              generate a YUM repository structure under $PWD/repo
 createrepo_in_container() {
-    yum install -y createrepo
+    yum install -y createrepo /usr/bin/find
 
     mkdir -p "$PWD/repo/sources/packages"
     mkdir -p "$PWD/repo/x86_64/packages"
