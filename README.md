@@ -1,5 +1,31 @@
 snapd packaging for Amazon Linux 2
 
+#### How to use the repositories
+
+The repository for Amazon Linux 2 and Amazon Linux 2023 is hosted directly on
+GitHub under https://bboozzoo.github.io/snapd-amazon-linux See the instructions
+below for installation steps on your system.
+
+##### Amazon Linux 2023
+
+```
+wget -O /etc/yum.repos.d/snapd.repo \
+    https://bboozzoo.github.io/snapd-amazon-linux/al2023/snapd.repo
+dnf install snapd -y
+```
+
+##### Amazon Linux 2
+
+```
+wget -O /etc/yum.repos.d/snapd.repo \
+    https://bboozzoo.github.io/snapd-amazon-linux/amzn2/snapd.repo
+yum install snapd -y
+systemctl enable --now snapd.socket
+```
+
+On Amazon Linux 2 the package installs with all services disabled by default.
+
+
 #### Build & Publish
 
 Use the `tool` to build the package and create a YUM compatible repository
