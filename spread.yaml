@@ -7,6 +7,7 @@ environment:
     PATH: $PATH:/home/spread/spread/tests/lib/bin
     LANG: "C.UTF-8"
     LANGUAGE: "en"
+    BASE_REPO_URL: https://bboozzoo.github.io/snapd-amazon-linux
 
 backends:
     google:
@@ -83,6 +84,33 @@ suites:
       yum erase -y snapd snap-confine
       rm -f /etc/yum.repos.d/spread.repo
       rm -rfv "$SPREAD_PATH/repo-unpacked"
+
+  spread/prebuilt-repo/:
+    summary: run tests with prebuilt packages in the repository
+    prepare: |
+      # set up a place to unpack the repo
+      case "$SPREAD_SYSTEM" in
+      amazon-linux-2-*)
+          repo_suffix=amzn2
+          ;;
+      amazon-linux-2023-*)
+          repo_suffix=al2023
+          ;;
+      *)
+          echo "unsupported $SPREAD_SYSTEM system"
+          exit 1
+          ;;
+      esac
+      wget -O /etc/yum.repos.d/snapd.repo ${BASE_REPO_URL}/${repo_suffix}/snapd.repo
+      # install snapd
+      yum install -y snapd
+      systemctl start snapd.socket
+      # wait for snapd to become ready
+      snap wait system seed.loaded
+
+    restore: |
+      yum erase -y snapd snap-confine
+      rm -f /etc/yum.repos.d/snapd.repo
 
   spread/build/:
     summary: package build
