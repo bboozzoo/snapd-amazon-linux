@@ -72,14 +72,14 @@ make_repo_file() {
     fi
     url="$1"
     cat <<EOF
-[snapd-amzn2]
-name=snapd packages for Amazon Linux 2
+[snapd-amzn]
+name=snapd packages for Amazon Linux
 baseurl=$url/\$basearch
 gpgcheck=0
 enabled=1
 
-[snapd-amzn2-sources]
-name=snapd packages for Amazon Linux 2
+[snapd-amzn-sources]
+name=snapd packages for Amazon Linux
 baseurl=$url/sources
 gpgcheck=0
 enabled=0
