@@ -1,0 +1,56 @@
+name: "Build packages and repository artifact"
+
+inputs:
+  target:
+    description: Build target
+    required: true
+    type: string
+
+  repo_tarball_name:
+    description: Name of the repository tarball
+    required: true
+    type: string
+
+  repo_artifact_name:
+    description: Name of the Github artifact containing repository
+    required: true
+    type: string
+
+  artifact_retention_days:
+    description: Artifact retention days
+    required: false
+    type: integer
+    default: 1
+
+  repo_url:
+    description: URL to the hosted repository
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Build RPM packages
+      shell: bash
+      run: |
+        IN_CONTAINER=1 ./tool build
+    - name: Build repository tarball
+      shell: bash
+      run: |
+        IN_CONTAINER=1 ./tool createrepo
+        IN_CONTAINER=1 ./tool repoconf ${{ inputs.repo_url }} > repo/snapd.repo
+        case ${{ inputs.target }} in
+        amazonlinux:2|amazonlinux:2023)
+            ;;
+        *)
+            echo "unsupported target ${{ inputs.target }}"
+            exit 1
+            ;;
+        esac
+        tar -cJv repo > "${{ inputs.repo_tarball_name }}"
+    - name: Uploading repository tarball
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.repo_artifact_name }}
+        path: "amazon-linux-*-repo*.tar.xz"
+        retention-days: ${{ inputs.artifact_retention_days }}
