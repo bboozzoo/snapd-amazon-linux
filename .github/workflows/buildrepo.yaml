@@ -22,7 +22,7 @@ jobs:
       run: |
         yum install git -y
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Build RPM packages
       run: |
         IN_CONTAINER=1 ./tool build
@@ -43,7 +43,7 @@ jobs:
         esac
         tar -cJv repo > "$repo_file"
     - name: Uploading repository tarball
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.artifact_name }}
         path: "amazon-linux-*-repo*.tar.xz"
