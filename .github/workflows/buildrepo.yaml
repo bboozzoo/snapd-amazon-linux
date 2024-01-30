@@ -5,8 +5,25 @@ on:
   push:
     branches: [ "master" ]
 
+  workflow_dispatch:
+    inputs:
+      skip_upload:
+        required: false
+        description: "Skip upload"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "packaging"
+  cancel-in-progress: false
+
 jobs:
-  build-repo-job:
+  build-repo:
     strategy:
       matrix:
         target: ["amazonlinux:2", "amazonlinux:2023"]
@@ -47,3 +64,39 @@ jobs:
       with:
         name: ${{ matrix.artifact_name }}
         path: "amazon-linux-*-repo*.tar.xz"
+
+  deploy:
+    needs:
+      - build-repo
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: repo-tarball-amazonlinux-2
+          path: repo/amzn2
+      - uses: actions/download-artifact@v4
+        with:
+          name: repo-tarball-amazonlinux-2023
+          path: repo/al2023
+
+      - name: Show the artifacts
+        run: |
+          find repo/ -ls
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: 'repo/'
+
+      - name: Deploy to GitHub Pages
+        # only on master or manual trigger
+        if: ${{ contains(fromJSON('["push", "workflow_dispatch"]'), github.event_name) && !inputs.skip_upload }}
+        id: deployment
+        uses: actions/deploy-pages@v4
