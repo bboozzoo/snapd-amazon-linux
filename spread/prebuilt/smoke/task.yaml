@@ -1,0 +1,11 @@
+summary: smoke test CLI
+
+prepare: |
+  snap install hello-world
+
+restore: |
+  snap remove --purge hello-world
+
+execute: |
+  hello-world
+  hello-world.evil || true

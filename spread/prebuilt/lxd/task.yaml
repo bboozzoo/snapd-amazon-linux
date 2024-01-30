@@ -1,0 +1,19 @@
+summary: install LXD
+
+prepare: |
+  snap install lxd
+
+restore: |
+  snap remove --purge lxd
+  rm -f out
+
+execute: |
+  lxd init --auto
+
+  lxc launch ubuntu:22.04 u1
+
+  lxc exec u1 -- /bin/bash -c 'echo hello-ubuntu' > out
+
+  test "$(cat out)" = "hello-ubuntu"
+
+  lxc stop u1
