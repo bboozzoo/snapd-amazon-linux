@@ -83,8 +83,8 @@
 %{!?_tmpfilesdir: %global _tmpfilesdir %{_prefix}/lib/tmpfiles.d}
 
 Name:           snapd
-Version:        2.61.1
-Release:        2%{?dist}
+Version:        2.61.2
+Release:        0%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -169,6 +169,7 @@ License:        GPLv3
 BuildRequires:  autoconf
 BuildRequires:  autoconf-archive
 BuildRequires:  automake
+BuildRequires:  make
 BuildRequires:  libtool
 BuildRequires:  gcc
 BuildRequires:  gettext
@@ -471,6 +472,8 @@ providing packages with %{import_path} prefix.
 %prep
 %if ! 0%{?with_bundled}
 %setup -q
+# Ensure there's no bundled stuff accidentally leaking in...
+rm -rf vendor/*
 %else
 # Extract each tarball properly
 %setup -q -D -b 1
@@ -488,7 +491,7 @@ mkdir -p src/github.com/snapcore
 ln -s ../../../ src/github.com/snapcore/snapd
 
 export GOPATH=$(pwd):%{gopath}
-# remove the mod file, we are building without go modules support
+# FIXME: move spec file really to a go.mod world instead of this hack
 rm -f go.mod
 export GO111MODULE=off
 
@@ -686,11 +689,6 @@ rm %{buildroot}%{_libexecdir}/snapd/system-shutdown
 rm -f %{buildroot}%{_unitdir}/snapd.apparmor.service
 rm -f %{buildroot}%{_libexecdir}/snapd/snapd-apparmor
 
-# Remove prompt services
-rm %{buildroot}%{_unitdir}/snapd.aa-prompt-listener.service
-rm %{buildroot}%{_userunitdir}/snapd.aa-prompt-ui.service
-rm %{buildroot}%{_datadir}/dbus-1/services/io.snapcraft.Prompt.service
-
 # Install Polkit configuration
 install -m 644 -D data/polkit/io.snapcraft.snapd.policy %{buildroot}%{_datadir}/polkit-1/actions
 
@@ -747,6 +745,7 @@ export GOPATH=%{buildroot}/%{gopath}:%{gopath}
 %else
 export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
 %endif
+# FIXME: we are in the go.mod world now but without this things fall apart
 export GO111MODULE=off
 %gotest %{import_path}/...
 %endif
@@ -945,6 +944,26 @@ fi
 
 
 %changelog
+* Fri Feb 16 2024 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.61.2
+ - Fix to enable plug/slot sanitization for prepare-image
+ - Fix panic when device-service.access=offline
+ - Support offline remodeling
+ - Allow offline update only remodels without serial
+ - Fail early when remodeling to old model revision
+ - Fix to enable plug/slot sanitization for validate-seed
+ - Allow removal of core snap on classic systems
+ - Fix network-control interface denial for file lock on /run/netns
+ - Add well-known core24 snap-id
+ - Fix remodel snap installation order
+ - Prevent remodeling from UC18+ to UC16
+ - Fix cups auto-connect on classic with cups snap installed
+ - u2f-devices interface support for GoTrust Idem Key with USB-C
+ - Fix to restore services after unlink failure
+ - Add libcudnn.so to Nvidia libraries
+ - Fix skipping base snap download due to false snapd downgrade
+   conflict
+
 * Sun Feb 11 2024 Maxwell G <maxwell@gtmx.me> - 2.61.1-2
 - Rebuild for golang 1.22.0
 
