@@ -57,6 +57,7 @@ spin_container() {
               -w /mnt \
               -e IN_CONTAINER=1 \
               -t \
+              ${EXTRA_FLAGS} \
               "$DOCKER_IMG" \
               /mnt/tool "$@"
 }
@@ -115,6 +116,14 @@ case "$cmd" in
         ;;
     repoconf)
         make_repo_file "$1"
+        ;;
+    shell)
+        set -x
+        if [ "$IN_CONTAINER" = "1" ]; then
+            exec /bin/bash
+        else
+            EXTRA_FLAGS=-i spin_container shell "$@"
+        fi
         ;;
     help|-h|--help|*)
         grep -E '^#HELP: ' "$0" | sed -e 's/#HELP: //'
