@@ -997,7 +997,7 @@ fi
 
 
 %changelog
-* Wed Feb 28 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.2-1.%{dist}.1
+* Wed Feb 28 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.2-1%{dist}.1
 - Rebuild for Amazon Linux
 
 * Fri Feb 16 2024 Ernest Lotter <ernest.lotter@canonical.com>
@@ -1023,13 +1023,13 @@ fi
 * Sun Feb 11 2024 Maxwell G <maxwell@gtmx.me> - 2.61.1-2
 - Rebuild for golang 1.22.0
 
-* Tue Jan 30 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.%{dist}.3
+* Tue Jan 30 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1%{dist}.3
 - Drop dependency on xdelta where on target where it is not available
 
-* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.%{dist}.2
+* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1%{dist}.2
 - Refine packaging for Amazon Linux 2023
 
-* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1.%{dist}.1
+* Mon Jan 29 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.61.1-1%{dist}.1
 - Rebuild for Amazon Linux
 
 * Sat Jan 27 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.61.1-1
