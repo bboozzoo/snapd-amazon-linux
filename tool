@@ -125,6 +125,25 @@ case "$cmd" in
             EXTRA_FLAGS=-i spin_container shell "$@"
         fi
         ;;
+    pack)
+        if [ ! -d "$PWD/repo" ]; then
+            echo "repo directory does not exist, run 'createrepo' first"
+            exit 1
+        fi
+        case "$TARGET" in
+            amazonlinux:2)
+                tarball_name="amazon-linux-2-repo.tar.xz"
+                ;;
+            amazonlinux:2023)
+                tarball_name="amazon-linux-2023-repo.tar.xz"
+                ;;
+            *)
+                echo "unsupported target $TARGET"
+                exit 1
+                ;;
+        esac
+        tar -cJv repo > "$tarball_name"
+        ;;
     help|-h|--help|*)
         grep -E '^#HELP: ' "$0" | sed -e 's/#HELP: //'
         exit 1
