@@ -74,6 +74,23 @@ jobs:
           mkdir -p repo/amzn2 repo/al2023
           tar -C repo/amzn2 --strip-components=1 -xvf repo-tarball-amazonlinux-2/amazon-linux-2-repo.tar.xz
           tar -C repo/al2023 --strip-components=1 -xvf repo-tarball-amazonlinux-2023/amazon-linux-2023-repo.tar.xz
+          # generate index.html in each directory so that we can browse the paths
+          (
+          cd repo/
+          LC_ALL=C find . -type d -print -exec sh -c 'tree "$0" \
+          -H "." \
+          -L 1 \
+          --noreport \
+          --houtro "" \
+          --dirsfirst \
+          --charset utf-8 \
+          -I "index.html" \
+          --ignore-case \
+          --timefmt "%d-%b-%Y %H:%M" \
+          -s \
+          -D \
+          -o "$0/index.html"' {} \;
+          )
           find repo/ -ls
 
       - name: Upload artifact
