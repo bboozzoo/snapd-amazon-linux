@@ -52,7 +52,11 @@ restore-each: |
 
 suites:
   spread/prebuilt/:
-    summary: run tests with prebuilt packages
+    summary: Run tests with prebuilt repo tarball
+    details: |
+      Run spread tests with prebuilt repository tarball, typically obtained by
+      downloading build artifacts form a PR, or when built locally with `tool
+      createrepo`.
     prepare: |
       # set up a place to unpack the repo
       mkdir -p "$SPREAD_PATH/repo-unpacked"
@@ -86,7 +90,10 @@ suites:
       rm -rfv "$SPREAD_PATH/repo-unpacked"
 
   spread/prebuilt-repo/:
-    summary: run tests with prebuilt packages in the repository
+    summary: Run tests with repository packages
+    details: |
+      Run tests with repository packages hosted at ${BASE_REPO_URL} (typically
+      github pages of the repository}.
     prepare: |
       # set up a place to unpack the repo
       case "$SPREAD_SYSTEM" in
