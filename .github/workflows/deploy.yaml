@@ -70,6 +70,7 @@ jobs:
 
       - name: Prepare the artifacts
         run: |
+          set -ex
           find . -ls
           mkdir -p repo/amzn2 repo/al2023
           tar -C repo/amzn2 --strip-components=1 -xvf repo-tarball-amazonlinux-2/amazon-linux-2-repo.tar.xz
@@ -81,7 +82,6 @@ jobs:
           -H "." \
           -L 1 \
           --noreport \
-          --houtro "" \
           --dirsfirst \
           --charset utf-8 \
           -I "index.html" \
