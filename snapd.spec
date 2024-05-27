@@ -83,7 +83,7 @@
 %{!?_tmpfilesdir: %global _tmpfilesdir %{_prefix}/lib/tmpfiles.d}
 
 Name:           snapd
-Version:        2.62
+Version:        2.63
 Release:        0%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
@@ -132,7 +132,7 @@ Provides:       %{name}-login-service%{?_isa} = 1.33
 %endif
 
 %if ! 0%{?with_bundled}
-BuildRequires: golang(github.com/boltdb/bolt)
+BuildRequires: golang(go.etcd.io/bbolt)
 BuildRequires: golang(github.com/coreos/go-systemd/activation)
 BuildRequires: golang(github.com/godbus/dbus)
 BuildRequires: golang(github.com/godbus/dbus/introspect)
@@ -225,7 +225,7 @@ BuildArch:     noarch
 %endif
 
 %if ! 0%{?with_bundled}
-Requires:      golang(github.com/boltdb/bolt)
+Requires:      golang(go.etcd.io/bbolt)
 Requires:      golang(github.com/coreos/go-systemd/activation)
 Requires:      golang(github.com/godbus/dbus)
 Requires:      golang(github.com/godbus/dbus/introspect)
@@ -254,7 +254,7 @@ Requires:      golang(gopkg.in/yaml.v3)
 # These Provides are unversioned because the sources in
 # the bundled tarball are unversioned (they go by git commit)
 # *sigh*... I hate golang...
-Provides:      bundled(golang(github.com/snapcore/bolt))
+Provides:      bundled(golang(go.etcd.io/bbolt))
 Provides:      bundled(golang(github.com/coreos/go-systemd/activation))
 Provides:      bundled(golang(github.com/godbus/dbus))
 Provides:      bundled(golang(github.com/godbus/dbus/introspect))
@@ -534,10 +534,8 @@ BUILDTAGS="${BUILDTAGS} nomanagers"
     %gobuild_static -o bin/snapctl $GOFLAGS %{import_path}/cmd/snapctl
 )
 
-%if 0%{?rhel}
-# There's no static link library for libseccomp in RHEL/CentOS...
-sed -e "s/-Bstatic -lseccomp/-Bstatic/g" -i cmd/snap-seccomp/*.go
-%endif
+# We need -D_GNU_SOURCE to include  xfs/linux.h for fallocate.
+sed -e 's,//#cgo CFLAGS: -D_FILE_OFFSET_BITS=64,//#cgo CFLAGS: -D_FILE_OFFSET_BITS=64 -D_GNU_SOURCE,' -i cmd/snap-seccomp/main.go
 %gobuild -o bin/snap-seccomp $GOFLAGS %{import_path}/cmd/snap-seccomp
 
 (
@@ -809,6 +807,7 @@ popd
 %dir %{_sharedstatedir}/snapd
 %dir %{_sharedstatedir}/snapd/assertions
 %dir %{_sharedstatedir}/snapd/cookie
+%dir %{_sharedstatedir}/snapd/cgroup
 %dir %{_sharedstatedir}/snapd/dbus-1
 %dir %{_sharedstatedir}/snapd/dbus-1/services
 %dir %{_sharedstatedir}/snapd/dbus-1/system-services
@@ -945,6 +944,54 @@ fi
 
 
 %changelog
+* Wed Apr 24 2024 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.63
+ - Support for snap services to show the current status of user
+   services (experimental)
+ - Refresh app awareness: record snap-run-inhibit notice when
+   starting app from snap that is busy with refresh (experimental)
+ - Refresh app awareness: use warnings as fallback for desktop
+   notifications (experimental)
+ - Aspect based configuration: make request fields in the aspect-
+   bundle's rules optional (experimental)
+ - Aspect based configuration: make map keys conform to the same
+   format as path sub-keys (experimental)
+ - Aspect based configuration: make unset and set behaviour similar
+   to configuration options (experimental)
+ - Aspect based configuration: limit nesting level for setting value
+   (experimental)
+ - Components: use symlinks to point active snap component revisions
+ - Components: add model assertion support for components
+ - Components: fix to ensure local component installation always gets
+   a new revision number
+ - Add basic support for a CIFS remote filesystem-based home
+   directory
+ - Add support for AppArmor profile kill mode to avoid snap-confine
+   error
+ - Allow more than one interface to grant access to the same API
+   endpoint or notice type
+ - Allow all snapd service's control group processes to send systemd
+   notifications to prevent warnings flooding the log
+ - Enable not preseeded single boot install
+ - Update secboot to handle new sbatlevel
+ - Fix to not use cgroup for non-strict confined snaps (devmode,
+   classic)
+ - Fix two race conditions relating to freedesktop notifications
+ - Fix missing tunables in snap-update-ns AppArmor template
+ - Fix rejection of snapd snap udev command line by older host snap-
+   device-helper
+ - Rework seccomp allow/deny list
+ - Clean up files removed by gadgets
+ - Remove non-viable boot chains to avoid secboot failure
+ - posix_mq interface: add support for missing time64 mqueue syscalls
+   mq_timedreceive_time64 and mq_timedsend_time64
+ - password-manager-service interface: allow kwalletd version 6
+ - kubernetes-support interface: allow SOCK_SEQPACKET sockets
+ - system-observe interface: allow listing systemd units and their
+   properties
+ - opengl interface: enable use of nvidia container toolkit CDI
+   config generation
+
 * Thu Mar 21 2024 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.62
  - Aspects based configuration schema support (experimental)
