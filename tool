@@ -87,6 +87,32 @@ enabled=0
 EOF
 }
 
+#HELP:     shell
+#HELP:              Open a shell in build environment
+shell_in_container() {
+    exec /bin/bash
+}
+
+#HELP:     pack
+#HELP:              Pack the repository tree
+pack() {
+    case "$TARGET" in
+        amazonlinux:2)
+            tarball_name="amazon-linux-2-repo.tar.xz"
+            ;;
+        amazonlinux:2023)
+            tarball_name="amazon-linux-2023-repo.tar.xz"
+            ;;
+        *)
+            echo "unsupported target $TARGET"
+            exit 1
+            ;;
+    esac
+    tar -cJv repo > "$tarball_name"
+}
+
+
+
 cmd="$1"
 shift
 case "$cmd" in
@@ -130,19 +156,7 @@ case "$cmd" in
             echo "repo directory does not exist, run 'createrepo' first"
             exit 1
         fi
-        case "$TARGET" in
-            amazonlinux:2)
-                tarball_name="amazon-linux-2-repo.tar.xz"
-                ;;
-            amazonlinux:2023)
-                tarball_name="amazon-linux-2023-repo.tar.xz"
-                ;;
-            *)
-                echo "unsupported target $TARGET"
-                exit 1
-                ;;
-        esac
-        tar -cJv repo > "$tarball_name"
+        pack
         ;;
     help|-h|--help|*)
         grep -E '^#HELP: ' "$0" | sed -e 's/#HELP: //'
