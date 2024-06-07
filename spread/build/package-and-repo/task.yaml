@@ -4,12 +4,25 @@ artifacts:
   - rpmbuild/RPMS
   - rpmbuild/SRPMS
   - rpmbuild/SOURCES
-  - amazon-linux-2-repo.tar.xz
+  - amazon-linux-*
 
 prepare: |
-  yum-builddep -y "$PWD/snapd.spec"
+  yum-builddep -y "$SPREAD_PATH/snapd.spec"
 
 execute: |
+  TARGET=
+  case "$SPREAD_SYSTEM" in
+      amazon-linux-2-*)
+          TARGET=amazonlinux:2
+          ;;
+      amazon-linux-2023-*)
+          TARGET=amazonlinux:2023
+          ;;
+      *)
+          echo "unsupported $SPREAD_SYSTEM"
+          exit 1
+          ;;
+  esac
   # shellcheck disable=SC2046
   wget $(rpmspec -P "$SPREAD_PATH/snapd.spec" | awk '/^Source[0-9]+: +https:/ { print $2 }')
   cp -av "$SPREAD_PATH/snapd.spec" .
@@ -18,4 +31,4 @@ execute: |
   done
   IN_CONTAINER=1 "$SPREAD_PATH/tool" build
   IN_CONTAINER=1 "$SPREAD_PATH/tool" createrepo
-  tar -cJv repo > amazon-linux-2-repo.tar.xz
+  TARGET="$TARGET" IN_CONTAINER=1 "$SPREAD_PATH/tool" pack
