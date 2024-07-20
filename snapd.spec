@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.63
-Release:        0%{?dist}
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -944,6 +944,9 @@ fi
 
 
 %changelog
+* Sat Jul 20 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.63-1
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
+
 * Wed Apr 24 2024 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.63
  - Support for snap services to show the current status of user
