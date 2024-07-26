@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.63
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPLv3
 URL:            https://%{provider_prefix}
@@ -204,7 +204,8 @@ the started snap applications.
 
 %package selinux
 Summary:        SELinux module for snapd
-License:        GPLv2+
+# Automatically converted from old format: GPLv2+ - review is highly recommended.
+License:        GPL-2.0-or-later
 BuildArch:      noarch
 BuildRequires:  selinux-policy
 BuildRequires:  selinux-policy-devel
@@ -944,6 +945,9 @@ fi
 
 
 %changelog
+* Fri Jul 26 2024 Miroslav Suchý <msuchy@redhat.com> - 2.63-2
+- convert license to SPDX
+
 * Sat Jul 20 2024 Fedora Release Engineering <releng@fedoraproject.org> - 2.63-1
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_41_Mass_Rebuild
 
