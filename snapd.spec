@@ -84,9 +84,10 @@
 
 Name:           snapd
 Version:        2.63
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
-License:        GPLv3
+# Automatically converted from old format: GPLv3 - review is highly recommended.
+License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
@@ -165,7 +166,8 @@ designed for working with self-contained, immutable packages.
 
 %package -n snap-confine
 Summary:        Confinement system for snap applications
-License:        GPLv3
+# Automatically converted from old format: GPLv3 - review is highly recommended.
+License:        GPL-3.0-only
 BuildRequires:  autoconf
 BuildRequires:  autoconf-archive
 BuildRequires:  automake
@@ -945,6 +947,9 @@ fi
 
 
 %changelog
+* Mon Jul 29 2024 Miroslav Suchý <msuchy@redhat.com> - 2.63-3
+- convert license to SPDX
+
 * Fri Jul 26 2024 Miroslav Suchý <msuchy@redhat.com> - 2.63-2
 - convert license to SPDX
 
