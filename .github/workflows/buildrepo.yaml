@@ -13,6 +13,7 @@ env:
 jobs:
   build-repo:
     strategy:
+      fail-fast: false
       matrix:
         target: ["amazonlinux:2", "amazonlinux:2023"]
         include:
