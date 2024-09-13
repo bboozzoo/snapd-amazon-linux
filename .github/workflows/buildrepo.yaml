@@ -13,6 +13,7 @@ env:
 jobs:
   build-repo:
     strategy:
+      fail-fast: false
       matrix:
         target: ["amazonlinux:2", "amazonlinux:2023"]
         include:
@@ -27,6 +28,12 @@ jobs:
 
     runs-on: ubuntu-latest
     container: ${{ matrix.target }}
+    env:
+      # the steps are executed inside the container, in case of AMZN2, node20
+      # build provided by github requires newer glibc than present in the
+      # container, so we must use a workaround, see:
+      # https://github.com/actions/checkout/issues/1809
+      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: ${{ matrix.target == 'amazonlinux:2' && 'true' || '' }}
     steps:
     - name: Install git
       run: |
