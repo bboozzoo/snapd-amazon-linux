@@ -935,7 +935,7 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
-* Thu Oct 25 2024 Zygmunt Krynicki <me@zygoon.pl>
+* Fri Oct 25 2024 Zygmunt Krynicki <me@zygoon.pl>
 - Cherry pick fix for SELinux timedatex problem from upstream
 
 * Sat Aug 24 2024 Ernest Lotter <ernest.lotter@canonical.com>
