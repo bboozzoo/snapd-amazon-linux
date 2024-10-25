@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.65.1
-Release:        0%{?dist}
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -934,8 +934,10 @@ if [ $1 -eq 0 ]; then
     %selinux_relabel_post
 fi
 
-
 %changelog
+* Thu Oct 25 2024 Zygmunt Krynicki <me@zygoon.pl>
+- Cherry pick fix for SELinux timedatex problem from upstream
+
 * Sat Aug 24 2024 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.65.1
  - Support building snapd using base Core22 (Snapcraft 8.x)
