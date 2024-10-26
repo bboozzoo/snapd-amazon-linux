@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.65.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
