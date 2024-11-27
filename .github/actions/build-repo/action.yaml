@@ -32,13 +32,17 @@ runs:
   steps:
     - name: Build RPM packages
       shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
       run: |
-        IN_CONTAINER=1 ./tool build
+        ./tool build
     - name: Build repository tarball
       shell: bash
+      env:
+        TARGET: ${{ inputs.target }}
       run: |
-        IN_CONTAINER=1 ./tool createrepo
-        IN_CONTAINER=1 ./tool repoconf ${{ inputs.repo_url }} > repo/snapd.repo
+        ./tool createrepo
+        ./tool repoconf ${{ inputs.repo_url }} > repo/snapd.repo
         case ${{ inputs.target }} in
         amazonlinux:2|amazonlinux:2023)
             ;;
@@ -49,7 +53,7 @@ runs:
         esac
         tar -cJv repo > "${{ inputs.repo_tarball_name }}"
     - name: Uploading repository tarball
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.repo_artifact_name }}
         path: "amazon-linux-*-repo*.tar.xz"

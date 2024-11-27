@@ -39,16 +39,9 @@ jobs:
             repo_url_suffix: al2023
 
     runs-on: ubuntu-latest
-    container: ${{ matrix.target }}
-    env:
-      # see the comment in buildrepo workflow
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: ${{ matrix.target == 'amazonlinux:2' && 'true' || '' }}
     steps:
-    - name: Install git
-      run: |
-        yum install git -y
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Build repository artifacts
       id: build-repo
       uses: "./.github/actions/build-repo"
