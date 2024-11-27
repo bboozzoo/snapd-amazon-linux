@@ -35,13 +35,18 @@ runs:
       env:
         TARGET: ${{ inputs.target }}
       run: |
+        # note, the 'rpmbuild' directory will be owned by root:root
         ./tool build
     - name: Build repository tarball
       shell: bash
       env:
         TARGET: ${{ inputs.target }}
       run: |
+        # note, the 'repo' directory will be owned by root:root
         ./tool createrepo
+        # fix the permissions
+        sudo chown -R $(id -u):$(id -g) repo
+
         ./tool repoconf ${{ inputs.repo_url }} > repo/snapd.repo
         case ${{ inputs.target }} in
         amazonlinux:2|amazonlinux:2023)
