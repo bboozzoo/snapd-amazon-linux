@@ -47,6 +47,8 @@ Build and create repository for Amazon Linux 2:
 ```sh
 TARGET=amazonlinux:2 ./tool build
 TARGET=amazonlinux:2 ./tool createrepo
+# pack for distribution or testing
+TARGET=amazonlinux:2 ./tool pack
 ```
 
 Build and create repository for Amazon Linux 2023:
@@ -54,6 +56,8 @@ Build and create repository for Amazon Linux 2023:
 ```sh
 TARGET=amazonlinux:2023 ./tool build
 TARGET=amazonlinux:2023 ./tool createrepo
+# pack for distribution or testing
+TARGET=amazonlinux:2023 ./tool pack
 ```
 
 #### Packaging
