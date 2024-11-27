@@ -989,6 +989,9 @@ fi
 
 
 %changelog
+* Wed Nov 27 2024 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.66.1-1%{dist}.1
+- Rebuild for Amazon Linux
+
 * Wed Nov 20 2024 Zygmunt Krynicki <me@zygoon.pl>
 - Drop only patch, applied upstream.
 
