@@ -84,12 +84,13 @@
 
 Name:           snapd
 Version:        2.66.1
-Release:        0%{?dist}
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
 Source0:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.no-vendor.tar.xz
 Source1:        https://%{provider_prefix}/releases/download/%{version}/%{name}_%{version}.only-vendor.tar.xz
+Patch0:         0001-data-selinux-remove-timedatex.patch
 
 ExclusiveArch:  %{?golang_arches}%{!?golang_arches:%{ix86} x86_64 %{arm} aarch64 ppc64le s390x}
 
@@ -935,6 +936,10 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Fri Nov 29 2024 Zygmunt Krynicki <me@zygoon.pl>
+- Re-cherry pick fix for SELinux timedatex problem from upstream
+  as it was not released in 2.66.1, sorry.
+
 * Wed Nov 20 2024 Zygmunt Krynicki <me@zygoon.pl>
 - Drop only patch, applied upstream.
 
