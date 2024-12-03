@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.66.1
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -484,6 +484,11 @@ rm -rf vendor/*
 %endif
 # Apply patches
 %autopatch -p1
+# systemd on EL8 does not recognize RestartMode
+# https://bugzilla.redhat.com/show_bug.cgi?id=2315759
+%if 0%{?el8}
+sed -i -e '/^RestartMode=/d' data/systemd/snapd.service.in
+%endif
 
 
 %build
@@ -936,6 +941,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Tue Dec 03 2024 Orion Poplawski <orion@nwra.com>
+- Drop RestartMode from snapd.service on EL8 (rhbz#2315759)
+
 * Fri Nov 29 2024 Zygmunt Krynicki <me@zygoon.pl>
 - Re-cherry pick fix for SELinux timedatex problem from upstream
   as it was not released in 2.66.1, sorry.
