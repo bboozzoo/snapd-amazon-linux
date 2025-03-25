@@ -83,7 +83,7 @@
 %{!?_tmpfilesdir: %global _tmpfilesdir %{_prefix}/lib/tmpfiles.d}
 
 Name:           snapd
-Version:        2.67
+Version:        2.68.3
 Release:        0%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
@@ -747,9 +747,9 @@ export GO111MODULE=off
 %endif
 
 # snap-confine tests (these always run!)
-pushd ./cmd
-make check
-popd
+make -C cmd -k check
+# and data files
+make -C data -k check
 
 %files
 #define license tag if not already defined
@@ -940,6 +940,152 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Mon Mar 10 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.68.3
+ - FDE: LP: #2101834 snapd 2.68+ and snap-bootstrap <2.68 fallback to
+   old keyring path
+ - Fix Plucky snapd deb build issue related to /var/lib/snapd/void
+   permissions
+ - Fix snapd deb build complaint about ifneq with extra bracket
+
+* Thu Feb 27 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.68.2
+ - FDE: use boot mode for FDE hooks
+ - FDE: add snap-bootstrap compatibility check to prevent image
+   creation with incompatible snapd and kernel snap
+ - FDE: add argon2 out-of-process KDF support
+ - FDE: have separate mutex for the sections writing a fresh modeenv
+ - FDE: LP: #2099709 update secboot to e07f4ae48e98
+ - Confdb: support pruning ephemeral data and process alternative
+   types in order
+ - core-initrd: look at env to mount directly to /sysroot
+ - core-initrd: prepare for Plucky build and split out 24.10
+   (Oracular)
+ - Fix missing primed packages in snapd snap manifest
+ - Interfaces: posix-mq | fix incorrect clobbering of global variable
+   and make interface more precise
+ - Interfaces: opengl | add more kernel fusion driver files
+
+* Mon Feb 24 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.68.1
+ - Fix snap-confine type specifier type mismatch on armhf
+
+* Thu Feb 13 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.68
+ - FDE: add support for new and more extensible key format that is
+   unified between TPM and FDE hook
+ - FDE: add support for adding passphrases during installation
+ - FDE: update secboot to 30317622bbbc
+ - Snap components: make kernel components available on firstboot
+   after either initramfs or ephemeral rootfs style install
+ - Snap components: mount drivers tree from initramfs so kernel
+   modules are available in early boot stages
+ - Snap components: support remodeling to models that contain
+   components
+ - Snap components: support offline remodeling to models that contain
+   components
+ - Snap components: support creating new recovery systems with
+   components
+ - Snap components: support downloading components with 'snap
+   download' command
+ - Snap components: support sideloading asserted components
+ - AppArmor Prompting(experimental): improve version checks and
+   handling of listener notification protocol for communication with
+   kernel AppArmor
+ - AppArmor Prompting(experimental): make prompt replies idempotent,
+   and have at most one rule for any given path pattern, with
+   potentially mixed outcomes and lifespans
+ - AppArmor Prompting(experimental): timeout unresolved prompts after
+   a period of client inactivity
+ - AppArmor Prompting(experimental): return an error if a patch
+   request to the API would result in a rule without any permissions
+ - AppArmor Prompting(experimental): warn if there is no prompting
+   client present but prompting is enabled, or if a prompting-related
+   error occurs during snapd startup
+ - AppArmor Prompting(experimental): do not log error when converting
+   empty permissions to AppArmor permissions
+ - Confdb(experimental): rename registries to confdbs (including API
+   /v2/registries => /v2/confdb)
+ - Confdb(experimental): support marking confdb schemas as ephemeral
+ - Confdb(experimental): add confdb-control assertion and feature
+   flag
+ - Refresh App Awareness(experimental): LP: #2089195 prevent
+   possibility of incorrect notification that snap will quit and
+   update
+ - Confidential VMs: snap-bootstrap support for loading partition
+   information from a manifest file for cloudimg-rootfs mode
+ - Confidential VMs: snap-bootstrap support for setting up cloudimg-
+   rootfs as an overlayfs with integrity protection
+ - dm-verity for essential snaps: add support for snap-integrity
+   assertion
+ - Interfaces: modify AppArmor template to allow owner read on
+   @{PROC}/@{pid}/fdinfo/*
+ - Interfaces: LP: #2072987 modify AppArmor template to allow using
+   setpriv to run daemon as non-root user
+ - Interfaces: add configfiles backend that ensures the state of
+   configuration files in the filesystem
+ - Interfaces: add ldconfig backend that exposes libraries coming
+   from snaps to either the rootfs or to other snaps
+ - Interfaces: LP: #1712808 LP: 1865503 disable udev backend when
+   inside a container
+ - Interfaces: add auditd-support interface that grants audit_control
+   capability and required paths for auditd to function
+ - Interfaces: add checkbox-support interface that allows
+   unrestricted access to all devices
+ - Interfaces: fwupd | allow access to dell bios recovery
+ - Interfaces: fwupd | allow access to shim and fallback shim
+ - Interfaces: mount-control | add mount option validator to detect
+   mount option conflicts early
+ - Interfaces: cpu-control | add read access to /sys/kernel/irq/
+ - Interfaces: locale-control | changed to be implicit on Ubuntu Core
+   Desktop
+ - Interfaces: microstack-support | support for utilizing of AMD SEV
+   capabilities
+ - Interfaces: u2f | added missing OneSpan device product IDs
+ - Interfaces: auditd-support | grant seccomp setpriority
+ - Interfaces: opengl interface | enable parsing of nvidia driver
+   information files
+ - Allow mksquashfs 'xattrs' when packing snap types os, core, base
+   and snapd as part of work to support non-root snap-confine
+ - Upstream/downstream packaging changes and build updates
+ - Improve error logs for malformed desktop files to also show which
+   desktop file is at fault
+ - Provide more precise error message when overriding channels with
+   grade during seed creation
+ - Expose 'snap prepare-image' validation parameter
+ - Add snap-seccomp 'dump' command that dumps the filter rules from a
+   compiled profile
+ - Add fallback release info location /etc/initrd-release
+ - Added core-initrd to snapd repo and fixed issues with ubuntu-core-
+   initramfs deb builds
+ - Remove stale robust-mount-namespace-updates experimental feature
+   flag
+ - Remove snapd-snap experimental feature (rejected) and it's feature
+   flag
+ - Changed snap-bootstrap to mount base directly on /sysroot
+ - Mount ubuntu-seed mounted as no-{suid,exec,dev}
+ - Mapping volumes to disks: add support for volume-assignments in
+   gadget
+ - Fix silently broken binaries produced by distro patchelf 0.14.3 by
+   using locally build patchelf 0.18
+ - Fix mismatch between listed refresh candidates and actual refresh
+   due to outdated validation sets
+ - Fix 'snap get' to produce compact listing for tty
+ - Fix missing store-url by keeping it as part of auxiliary store
+   info
+ - Fix snap-confine attempting to retrieve device cgroup setup inside
+   container where it is not available
+ - Fix 'snap set' and 'snap get' panic on empty strings with early
+   error checking
+ - Fix logger debug entries to show correct caller and file
+   information
+ - Fix issue preventing hybrid systems from being seeded on first
+   boot
+ - LP: #1966203 remove auto-import udev rules not required by deb
+   package to avoid unwanted syslog errors
+ - LP: #1886414 fix progress reporting when stdout is on a tty, but
+   stdin is not
+
 * Wed Jan 22 2025 Zygmunt Krynicki <zygmunt.krynicki@canonical.com>
 - The changelog date and author have been modified to maintain linearity.
 - Drop 0001-data-selinux-remove-timedatex.patch - applied upstream.
@@ -1022,6 +1168,20 @@ fi
 
 * Sun Jan 19 2025 Fedora Release Engineering <releng@fedoraproject.org> - 2.66.1-3
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_42_Mass_Rebuild
+
+* Wed Jan 15 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.67.1
+ - Fix apparmor permissions to allow snaps access to kernel modules
+   and firmware on UC24, which also fixes the kernel-modules-control
+   interface on UC24
+ - AppArmor prompting (experimental): disallow /./ and /../ in path
+   patterns
+ - Fix 'snap run' getent based user lookup in case of bad PATH
+ - Fix snapd using the incorrect AppArmor version during undo of an
+   refresh for regenerating snap profiles
+ - Add new syscalls to base templates
+ - hardware-observe interface: allow riscv_hwprobe syscall
+ - mount-observe interface: allow listmount and statmount syscalls
 
 * Tue Dec 03 2024 Orion Poplawski <orion@nwra.com>
 - Drop RestartMode from snapd.service on EL8 (rhbz#2315759)
