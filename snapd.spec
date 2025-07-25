@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.70
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -947,6 +947,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Fri Jul 25 2025 Fedora Release Engineering <releng@fedoraproject.org> - 2.70-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_43_Mass_Rebuild
+
 * Tue Jun 03 2025 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.70
  - FDE: Fix reseal with v1 hook key format
