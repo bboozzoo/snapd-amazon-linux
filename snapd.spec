@@ -62,27 +62,27 @@
 %global provider_prefix %{provider}.%{provider_tld}/%{project}/%{repo}
 %global import_path     %{provider_prefix}
 
-%global snappy_svcs      snapd.service snapd.socket snapd.autoimport.service snapd.seeded.service snapd.mounts.target snapd.mounts-pre.target
+%global snappy_svcs      snapd.service snapd.socket snapd.autoimport.service snapd.seeded.service snapd.apparmor.service snapd.mounts.target snapd.mounts-pre.target
 %global snappy_user_svcs snapd.session-agent.service snapd.session-agent.socket
 
 # Until we have a way to add more extldflags to gobuild macro...
 # Always use external linking when building static binaries.
 %if 0%{?fedora} || 0%{?rhel} >= 8 || 0%{?amzn2023}
-%define gobuild_static(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
+%define gobuild_static(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags -static'" -a -v %{?**};
 %endif
 %if 0%{?rhel} == 7
 # no pass PIE flags due to https://bugzilla.redhat.com/show_bug.cgi?id=1634486
-%define gobuild_static(o:) go build -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags -static'" -a -v -x %{?**};
+%define gobuild_static(o:) go build -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags -static'" -a -v %{?**};
 %endif
 
 # These macros are missing BUILDTAGS in RHEL 8/9, see RHBZ#1825138
 %if 0%{?rhel} >= 8 || 0%{?amzn2023}
-%define gobuild(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags'" -a -v -x %{?**};
+%define gobuild(o:) go build -buildmode pie -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags'" -a -v %{?**};
 %endif
 
 # These macros are not defined in RHEL 7
 %if 0%{?rhel} == 7
-%define gobuild(o:) go build -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags'" -a -v -x %{?**};
+%define gobuild(o:) go build -compiler gc -tags="rpm_crashtraceback ${BUILDTAGS:-}" -ldflags "-B 0x$(head -c20 /dev/urandom|od -An -tx1|tr -d ' \\n') -linkmode external -extldflags '%__global_ldflags'" -a -v %{?**};
 %define gotest() go test -compiler gc %{?**};
 %endif
 
@@ -101,7 +101,7 @@
 %endif
 
 Name:           snapd
-Version:        2.68.3
+Version:        2.70
 Release:        1%{?dist}.1
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
@@ -160,8 +160,8 @@ Provides:       %{name}-login-service%{?_isa} = 1.33
 BuildRequires: golang(go.etcd.io/bbolt)
 BuildRequires: golang(github.com/bmatcuk/doublestar/v4)
 BuildRequires: golang(github.com/coreos/go-systemd/activation)
-BuildRequires: golang(github.com/godbus/dbus)
-BuildRequires: golang(github.com/godbus/dbus/introspect)
+BuildRequires: golang(github.com/godbus/dbus/v5)
+BuildRequires: golang(github.com/godbus/dbus/v5/introspect)
 BuildRequires: golang(github.com/gorilla/mux)
 BuildRequires: golang(github.com/jessevdk/go-flags)
 BuildRequires: golang(github.com/juju/ratelimit)
@@ -257,8 +257,8 @@ BuildArch:     noarch
 Requires:      golang(go.etcd.io/bbolt)
 Requires:      golang(github.com/bmatcuk/doublestar/v4)
 Requires:      golang(github.com/coreos/go-systemd/activation)
-Requires:      golang(github.com/godbus/dbus)
-Requires:      golang(github.com/godbus/dbus/introspect)
+Requires:      golang(github.com/godbus/dbus/v5)
+Requires:      golang(github.com/godbus/dbus/v5/introspect)
 Requires:      golang(github.com/gorilla/mux)
 Requires:      golang(github.com/jessevdk/go-flags)
 Requires:      golang(github.com/juju/ratelimit)
@@ -287,8 +287,8 @@ Requires:      golang(gopkg.in/yaml.v3)
 Provides:      bundled(golang(go.etcd.io/bbolt))
 Provides:      bundled(golang(github.com/bmatcuk/doublestar/v4))
 Provides:      bundled(golang(github.com/coreos/go-systemd/activation))
-Provides:      bundled(golang(github.com/godbus/dbus))
-Provides:      bundled(golang(github.com/godbus/dbus/introspect))
+Provides:      bundled(golang(github.com/godbus/dbus/v5))
+Provides:      bundled(golang(github.com/godbus/dbus/v5/introspect))
 Provides:      bundled(golang(github.com/gorilla/mux))
 Provides:      bundled(golang(github.com/jessevdk/go-flags))
 Provides:      bundled(golang(github.com/juju/ratelimit))
@@ -535,7 +535,7 @@ export GO111MODULE=off
 # see https://github.com/gofed/go-macros/blob/master/rpm/macros.d/macros.go-compilers-golang
 BUILDTAGS=
 %if 0%{?with_test_keys}
-BUILDTAGS="withtestkeys nosecboot"
+BUILDTAGS="withtestkeys nosecboot structuredlogging"
 %else
 BUILDTAGS="nosecboot"
 %endif
@@ -552,6 +552,7 @@ sed -e "s:github.com/snapcore/bolt:github.com/boltdb/bolt:g" -i advisor/*.go
 BUILDTAGS="${BUILDTAGS} nomanagers"
 %gobuild -o bin/snap $GOFLAGS %{import_path}/cmd/snap
 %gobuild -o bin/snap-failure $GOFLAGS %{import_path}/cmd/snap-failure
+%gobuild -o bin/snapd-apparmor $GOFLAGS %{import_path}/cmd/snapd-apparmor
 
 # To ensure things work correctly with base snaps,
 # snap-exec, snap-update-ns, and snapctl need to be built statically
@@ -591,7 +592,6 @@ BUILDTAGS="${BUILDTAGS} nomanagers"
 # Build snap-confine
 pushd ./cmd
 autoreconf --force --install --verbose
-# FIXME: add --enable-caps-over-setuid as soon as possible (setuid discouraged!)
 %configure \
     --disable-apparmor \
 %if 0%{?with_selinux}
@@ -662,6 +662,7 @@ install -p -m 0755 bin/snap-failure %{buildroot}%{_libexecdir}/snapd
 install -p -m 0755 bin/snapd %{buildroot}%{_libexecdir}/snapd
 install -p -m 0755 bin/snap-update-ns %{buildroot}%{_libexecdir}/snapd
 install -p -m 0755 bin/snap-seccomp %{buildroot}%{_libexecdir}/snapd
+install -p -m 0755 bin/snapd-apparmor %{buildroot}%{_libexecdir}/snapd
 # Ensure /usr/bin/snapctl is a symlink to /usr/libexec/snapd/snapctl
 install -p -m 0755 bin/snapctl %{buildroot}%{_libexecdir}/snapd/snapctl
 ln -sf %{_libexecdir}/snapd/snapctl %{buildroot}%{_bindir}/snapctl
@@ -720,12 +721,17 @@ rm -fv %{buildroot}%{_unitdir}/snapd.recovery-chooser-trigger.service
 rm %{buildroot}%{_libexecdir}/snapd/snapd.core-fixup.sh
 rm %{buildroot}%{_libexecdir}/snapd/system-shutdown
 
-# Remove snapd apparmor service
-rm -f %{buildroot}%{_unitdir}/snapd.apparmor.service
-rm -f %{buildroot}%{_libexecdir}/snapd/snapd-apparmor
+# Remove gpio-chardev ordering target
+rm -f %{buildroot}%{_unitdir}/snapd.gpio-chardev-setup.target
 
 # Disable re-exec by default
-echo 'SNAP_REEXEC=0' > %{buildroot}%{_sysconfdir}/sysconfig/snapd
+mkdir -p %{buildroot}%{_sysconfdir}/sysconfig
+cat <<'EOF' > %{buildroot}%{_sysconfdir}/sysconfig/snapd
+# Snapd daemon can reexec into the binary from the snapd snap, if
+# it is newer than the version installed through distro packaging.
+# Set to 1 to enable reexec. The default is 0.
+#SNAP_REEXEC=0
+EOF
 
 # Create state.json and the README file to be ghosted
 touch %{buildroot}%{_sharedstatedir}/snapd/state.json
@@ -810,6 +816,7 @@ make -C data -k check
 %{_libexecdir}/snapd/snap-failure
 %{_libexecdir}/snapd/info
 %{_libexecdir}/snapd/snap-mgmt
+%{_libexecdir}/snapd/snapd-apparmor
 %if 0%{?with_selinux}
 %{_libexecdir}/snapd/snap-mgmt-selinux
 %endif
@@ -828,6 +835,7 @@ make -C data -k check
 %{_unitdir}/snapd.autoimport.service
 %{_unitdir}/snapd.failure.service
 %{_unitdir}/snapd.seeded.service
+%{_unitdir}/snapd.apparmor.service
 %{_unitdir}/snapd.mounts.target
 %{_unitdir}/snapd.mounts-pre.target
 %{_userunitdir}/snapd.session-agent.service
@@ -884,9 +892,8 @@ make -C data -k check
 %doc cmd/snap-confine/PORTING
 %license COPYING
 %dir %{_libexecdir}/snapd
-# For now, we can't use caps
-# FIXME: Switch to "%%attr(0755,root,root) %%caps(cap_sys_admin=pe)" asap!
-%attr(4755,root,root) %{_libexecdir}/snapd/snap-confine
+%caps(cap_dac_override,cap_dac_read_search,cap_sys_admin,cap_sys_chroot,cap_chown,cap_fowner,cap_sys_ptrace=p) %{_libexecdir}/snapd/snap-confine
+%{_libexecdir}/snapd/snap-confine.caps
 %{_libexecdir}/snapd/snap-device-helper
 %{_libexecdir}/snapd/snap-discard-ns
 %{_libexecdir}/snapd/snap-gdb-shim
@@ -994,8 +1001,189 @@ fi
 
 
 %changelog
+* Thu Jul 31 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.70-1%{dist}.1
+- Rebuild for Amazon Linux
+
+* Fri Jul 25 2025 Fedora Release Engineering <releng@fedoraproject.org> - 2.70-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_43_Mass_Rebuild
+
+* Tue Jun 03 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.70
+ - FDE: Fix reseal with v1 hook key format
+ - FDE: set role in TPM keys
+ - AppArmor prompting (experimental): add handling for expired
+   requests or listener in the kernel
+ - AppArmor prompting: log the notification protocol version
+   negotiated with the kernel
+ - AppArmor prompting: implement notification protocol v5 (manually
+   disabled for now)
+ - AppArmor prompting: register listener ID with the kernel and
+   resend notifications after snapd restart (requires protocol v5+)
+ - AppArmor prompting: select interface from metadata tags and set
+   request interface accordingly (requires protocol v5+)
+ - AppArmor prompting: include request PID in prompt
+ - AppArmor prompting: move the max prompt ID file to a subdirectory
+   of the snap run directory
+ - AppArmor prompting: avoid race between closing/reading socket fd
+ - Confdb (experimental): make save/load hooks mandatory if affecting
+   ephemeral
+ - Confdb: clear tx state on failed load
+ - Confdb: modify 'snap sign' formats JSON in assertion bodies (e.g.
+   confdb-schema)
+ - Confdb: add NestedEphemeral to confdb schemas
+ - Confdb: add early concurrency checks
+ - Simplify building Arch package
+ - Enable snapd.apparmor on Fedora
+ - Build snapd snap with libselinux
+ - Emit snapd.apparmor warning only when using apparmor backend
+ - When running snap, on system key mismatch e.g. due to network
+   attached HOME, trigger and wait for a security profiles
+   regeneration
+ - Avoid requiring state lock to get user, warnings, or pending
+   restarts when handling API requests
+ - Start/stop ssh.socket for core24+ when enabling/disabling the ssh
+   service
+ - Allow providing a different base when overriding snap
+ - Modify snap-bootstrap to mount snapd snap directly to /snap
+ - Modify snap-bootstrap to mount /lib/{modules,firmware} from snap
+   as fallback
+ - Modify core-initrd to use systemctl reboot instead of /sbin/reboot
+ - Copy the initramfs 'manifest-initramfs.yaml' to initramfs file
+   creation directory so it can be copied to the kernel snap
+ - Build the early initrd from installed ucode packages
+ - Create drivers tree when remodeling from UC20/22 to UC24
+ - Load gpio-aggregator module before the helper-service needs it
+ - Run 'systemctl start' for mount units to ensure they are run also
+   when unchanged
+ - Update godbus version to 'v5 v5.1.0'
+ - Add support for POST to /v2/system-info with system-key-mismatch
+   indication from the client
+ - Add 'snap sign --update-timestamp' flag to update timestamp before
+   signing
+ - Add vfs support for snap-update-ns to use to simulate and evaluate
+   mount sequences
+ - Add refresh app awareness debug logging
+ - Add snap-bootstrap scan-disk subcommand to be called from udev
+ - Add feature to inject proxy store assertions in build image
+ - Add OP-TEE bindings, enable by default in ARM and ARM64 builds
+ - Fix systemd dependency options target to go under 'unit' section
+ - Fix snap-bootstrap reading kernel snap instead of base resulting
+   in bad modeenv
+ - Fix a regression during seeding when using early-config
+ - LP: #2107443 reset SHELL to /bin/bash in non-classic snaps
+ - Make Azure kernels reboot upon panic
+ - Fix snap-confine to not drop capabilities if the original user is
+   already root
+ - Fix data race when stopping services
+ - Fix task dependency issue by temporarily disable re-refresh on
+   prerequisite updates
+ - Fix compiling against op-tee on armhf
+ - Fix dbx update when not using FDE
+ - Fix potential validation set deadlock due to bases waiting on
+   snaps
+ - LP: #2104066 Only cancel notices requests on stop/shutdown
+ - Interfaces: bool-file | fix gpio glob pattern as required for
+   '[XXXX]*' format
+ - Interfaces: system-packages-doc | allow access to
+   /usr/local/share/doc
+ - Interfaces: ros-snapd-support interface | added new interface
+ - Interfaces: udisks2 | allow chown capability
+ - Interfaces: system-observe | allow reading cpu.max
+ - Interfaces: serial-port | add ttyMAXX to allowed list
+ - Interfaces: modified seccomp template to disallow
+   'O_NOTIFICATION_PIPE'
+ - Interfaces: fwupd | add support for modem-manager plugin
+ - Interfaces: gpio-chardev | make unsupported and remove
+   experimental flag to hide this feature until gpio-aggregator is
+   available
+ - Interfaces: hardware-random | fix udev match rule
+ - Interfaces: timeserver-control | extend to allow timedatectl
+   timesync commands
+ - Interfaces: add symlinks backend
+ - Interfaces: system key mismatch handling
+
 * Tue May 20 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.68.3-1%{dist}.1
 - Rebuild for Amazon Linux
+
+* Tue Apr 08 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.69
+ - FDE: re-factor listing of the disks based on run mode model and
+   model to correctly resolve paths
+ - FDE: run snapd from snap-failure with the correct keyring mode
+ - Snap components: allow remodeling back to an old snap revision
+   that includes components
+ - Snap components: fix remodel to a kernel snap that is already
+   installed on the system, but not the current kernel due to a
+   previous remodel.
+ - Snap components: fix for snapctl inputs that can crash snapd
+ - Confdb (experimental): load ephemeral data when reading data via
+   snapctl get
+ - Confdb (experimental): load ephemeral data when reading data via
+   snap get
+ - Confdb (experimental): rename {plug}-view-changed hook to observe-
+   view-{plug}
+ - Confdb (experimental): rename confdb assertion to confdb-schema
+ - Confdb (experimental): change operator grouping in confdb-control
+   assertion
+ - Confdb (experimental): add confdb-control API
+ - AppArmor: extend the probed features to include the presence of
+   files, as well as directories
+ - AppArmor prompting (experimental): simplify the listener
+ - AppArmor metadata tagging (disabled): probe parser support for
+   tags
+ - AppArmor metadata tagging (disabled): implement notification
+   protocol v5
+ - Confidential VMs: sysroot.mount is now dynamically created by
+   snap-bootstrap instead of being a static file in the initramfs
+ - Confidential VMs: Add new implementation of snap integrity API
+ - Non-suid snap-confine: first phase to replace snap-confine suid
+   with capabilities to achieve the required permissions
+ - Initial changes for dynamic security profiles updates
+ - Provide snap icon fallback for /v2/icons without requiring network
+   access at runtime
+ - Add eMMC gadget update support
+ - Support reexec when using /usr/libexec/snapd on the host (Arch
+   Linux, openSUSE)
+ - Auto detect snap mount dir location on unknown distributions
+ - Modify snap-confine AppArmor template to allow all glibc HWCAPS
+   subdirectories to prevent launch errors
+ - LP: #2102456 update secboot to bf2f40ea35c4 and modify snap-
+   bootstrap to remove usage of go templates to reduce size by 4MB
+ - Fix snap-bootstrap to mount kernel snap from
+   /sysroot/writable/system-data
+ - LP: #2106121 fix snap-bootstrap busy loop
+ - Fix encoding of time.Time by using omitzero instead of omitempty
+   (on go 1.24+)
+ - Fix setting snapd permissions through permctl for openSUSE
+ - Fix snap struct json tags typo
+ - Fix snap pack configure hook permissions check incorrect file mode
+ - Fix gadget snap reinstall to honor existing sizes of partitions
+ - Fix to update command line when re-executing a snapd tool
+ - Fix 'snap validate' of specific missing newline and add error on
+   missed case of 'snap validate --refresh' without another action
+ - Workaround for snapd-confine time_t size differences between
+   architectures
+ - Disallow pack and install of snapd, base and os with specific
+   configure hooks
+ - Drop udev build dependency that is no longer required and add
+   missing systemd-dev dependency
+ - Build snap-bootstrap with nomanagers tag to decrease size by 1MB
+ - Interfaces: polkit | support custom polkit rules
+ - Interfaces: opengl | LP: #2088456 fix GLX on nvidia when xorg is
+   confined by AppArmor
+ - Interfaces: log-observe | add missing udev rule
+ - Interfaces: hostname-control | fix call to hostnamectl in core24
+ - Interfaces: network-control | allow removing created network
+   namespaces
+ - Interfaces: scsi-generic | re-enable base declaration for scsi-
+   generic plug
+ - Interfaces: u2f | add support for Arculus AuthentiKey
+
+* Wed Apr 02 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.68.4
+ - Snap components: LP: #2104933 workaround for classic 24.04/24.10
+   models that incorrectly specify core22 instead of core24
+ - Update build dependencies
 
 * Mon Mar 10 2025 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.68.3
