@@ -1102,6 +1102,9 @@ fi
  - Interfaces: add symlinks backend
  - Interfaces: system key mismatch handling
 
+* Tue May 20 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.68.3-1%{dist}.1
+- Rebuild for Amazon Linux
+
 * Tue Apr 08 2025 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.69
  - FDE: re-factor listing of the disks based on run mode model and
@@ -1181,9 +1184,6 @@ fi
  - Snap components: LP: #2104933 workaround for classic 24.04/24.10
    models that incorrectly specify core22 instead of core24
  - Update build dependencies
-
-* Tue May 20 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.68.3-1%{dist}.1
-- Rebuild for Amazon Linux
 
 * Mon Mar 10 2025 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.68.3
