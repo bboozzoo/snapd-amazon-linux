@@ -480,7 +480,7 @@ providing packages with %{import_path} prefix.
 %if ! 0%{?with_bundled}
 %setup -q
 # Ensure there's no bundled stuff accidentally leaking in...
-rm -rf vendor
+rm -rf vendor c-vendor
 %else
 # Extract each tarball properly
 %setup -q -D -b 1
