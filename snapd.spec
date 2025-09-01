@@ -504,7 +504,9 @@ export GOPATH=$(pwd):%{gopath}
 # FIXME: move spec file really to a go.mod world instead of this hack
 rm -f go.mod
 export GO111MODULE=off
-sed -e 's/-mod=readonly//g' -e 's/-mod=vedor//g' <packaging/snapd.mk >packaging/snapd2.mk
+# Ensure we do not pass -mod=foo argument to go, as we disable modules and go
+# does not allow us to do both.
+sed -e 's/-mod=readonly//g' -e 's/-mod=vendor//g' <packaging/snapd.mk >packaging/snapd2.mk
 
 # Generate version files
 ./mkversion.sh "%{version}-%{release}"
