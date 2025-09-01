@@ -509,7 +509,23 @@ export GO111MODULE=off
 sed -e 's/-mod=readonly//g' -e 's/-mod=vendor//g' <packaging/snapd.mk >packaging/snapd2.mk
 
 # Generate version files
-./mkversion.sh "%{version}-%{release}"
+cat <<EOF >snapdtool/version_generated.go
+package snapdtool
+
+func init() {
+	Version = "%{version}-%{release}"
+}
+EOF
+
+cat <<EOF >cmd/VERSION
+%{version}-%{release}
+EOF
+
+cat <<EOF >data/info
+VERSION=%{version}-%{release}
+SNAPD_APPARMOR_REEXEC=0
+SNAPD_ASSERTS_FORMATS='{"account-key":1,"snap-declaration":6,"system-user":2}'
+EOF
 
 %if ! 0%{?with_bundled}
 # We don't need the snapcore fork for bolt - it is just a fix on ppc
