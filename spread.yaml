@@ -22,14 +22,53 @@ backends:
                   workers: 1
                   storage: preserve-size
 
-    qemu:
+    garden:
+        type: adhoc
+        allocate: |
+            # Spread automatically injects /snap/bin to PATH. When we are
+            # running from the image-garden snap then SPREAD_HOST_PATH is the
+            # original path before such modifications were applied. Snap
+            # applications cannot normally run /snap/bin/* entry-points
+            # successfully so re-set PATH to the original value, as provided by
+            # snapcraft.
+            if [ -n "${SPREAD_HOST_PATH-}" ]; then
+                PATH="${SPREAD_HOST_PATH}"
+            fi
+            # Spread does not expose any settings to ad-hoc backends.
+            export QEMU_MEM_OPTION="-m 3072"
+            export QEMU_SMP_OPTION="-smp 4"
+            # Convert convention of system names used by snapd to corresponding image-garden name:
+            # - amazon-linux-2023-64    => amazonlinux-cloud-2023-$(uname -m)
+            # - arch-linux-64           => archlinux-cloud.$(uname -m)
+            # - centos-10-64            => centos-cloud-10.$(uname -m)
+            # - debian-sid-64           => debian-cloud-sid.$(uname -m)
+            # - fedora-42-64            => fedora-cloud-42.$(uname -m)
+            # - opensuse-tumbleweed-64  => opensuse-cloud-tumbleweed.$(uname -m)
+            # - ubuntu-24.04-64         => ubuntu-cloud-24.04.$(uname -m)
+            # - ubuntu-core-24-64       => ubuntu-cloud-24.04.$(uname -m)
+            exec image-garden allocate "$(echo "$SPREAD_SYSTEM" | sed \
+              -e 's/\(\w\+\)-linux/\1linux/' \
+              -e 's/\(\w\+\)/\1-cloud/' \
+              -e 's/-64$/.'"$(uname -m)"'/g')"
+        discard: |
+            # Spread automatically injects /snap/bin to PATH. When we are
+            # running from the image-garden snap then SPREAD_HOST_PATH is the
+            # original path before such modifications were applied. Snap
+            # applications cannot normally run /snap/bin/* entry-points
+            # successfully so re-set PATH to the original value, as provided by
+            # snapcraft.
+            if [ -n "${SPREAD_HOST_PATH-}" ]; then
+                PATH="${SPREAD_HOST_PATH}"
+            fi
+            # Stop the running qemu instance corresponding to the given address.
+            exec image-garden discard "$SPREAD_SYSTEM_ADDRESS"
         systems:
             - amazon-linux-2-64:
-                  username: ec2-user
-                  password: amazon
+                  username: root
+                  password: root
             - amazon-linux-2023-64:
-                  username: ec2-user
-                  password: amazon
+                  username: root
+                  password: root
 
 path: /home/spread
 
