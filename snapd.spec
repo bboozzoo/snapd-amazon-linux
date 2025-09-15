@@ -1038,7 +1038,7 @@ fi
 %endif
 
 %changelog
-* Thu Seo 15 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.71-1%{dist}.1
+* Thu Sep 15 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.71-1%{dist}.1
 - Rebuild for Amazon Linux
 
 * Fri Aug 22 2025 Ernest Lotter <ernest.lotter@canonical.com>
