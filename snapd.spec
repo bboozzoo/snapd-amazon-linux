@@ -62,7 +62,7 @@
 %global provider_prefix %{provider}.%{provider_tld}/%{project}/%{repo}
 %global import_path     %{provider_prefix}
 
-%global snappy_svcs      snapd.service snapd.socket snapd.autoimport.service snapd.seeded.service snapd.apparmor.service snapd.mounts.target snapd.mounts-pre.target
+%global snappy_svcs      snapd.service snapd.socket snapd.seeded.service snapd.apparmor.service snapd.mounts.target snapd.mounts-pre.target
 %global snappy_user_svcs snapd.session-agent.service snapd.session-agent.socket
 
 # Until we have a way to add more extldflags to gobuild macro...
@@ -101,7 +101,7 @@
 %endif
 
 Name:           snapd
-Version:        2.70
+Version:        2.71
 Release:        1%{?dist}.1
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
@@ -184,6 +184,7 @@ BuildRequires: golang(gopkg.in/tomb.v2)
 BuildRequires: golang(gopkg.in/yaml.v2)
 BuildRequires: golang(gopkg.in/yaml.v3)
 %endif
+BuildRequires: go-rpm-macros
 
 %description
 Snappy is a modern, cross-distribution, transactional package manager
@@ -254,7 +255,6 @@ BuildArch:     noarch
 %endif
 
 %if ! 0%{?with_bundled}
-Requires:      golang(go.etcd.io/bbolt)
 Requires:      golang(github.com/bmatcuk/doublestar/v4)
 Requires:      golang(github.com/coreos/go-systemd/activation)
 Requires:      golang(github.com/godbus/dbus/v5)
@@ -264,9 +264,12 @@ Requires:      golang(github.com/jessevdk/go-flags)
 Requires:      golang(github.com/juju/ratelimit)
 Requires:      golang(github.com/kr/pretty)
 Requires:      golang(github.com/kr/text)
+Requires:      golang(github.com/mattn/go-runewidth)
 Requires:      golang(github.com/mvo5/goconfigparser)
+Requires:      golang(github.com/rivo/uniseg)
 Requires:      golang(github.com/seccomp/libseccomp-golang)
 Requires:      golang(github.com/snapcore/go-gettext)
+Requires:      golang(go.etcd.io/bbolt)
 Requires:      golang(golang.org/x/crypto/openpgp/armor)
 Requires:      golang(golang.org/x/crypto/openpgp/packet)
 Requires:      golang(golang.org/x/crypto/sha3)
@@ -283,8 +286,6 @@ Requires:      golang(gopkg.in/yaml.v3)
 %else
 # These Provides are unversioned because the sources in
 # the bundled tarball are unversioned (they go by git commit)
-# *sigh*... I hate golang...
-Provides:      bundled(golang(go.etcd.io/bbolt))
 Provides:      bundled(golang(github.com/bmatcuk/doublestar/v4))
 Provides:      bundled(golang(github.com/coreos/go-systemd/activation))
 Provides:      bundled(golang(github.com/godbus/dbus/v5))
@@ -294,9 +295,12 @@ Provides:      bundled(golang(github.com/jessevdk/go-flags))
 Provides:      bundled(golang(github.com/juju/ratelimit))
 Provides:      bundled(golang(github.com/kr/pretty))
 Provides:      bundled(golang(github.com/kr/text))
+Provides:      bundled(golang(github.com/mattn/go-runewidth))
 Provides:      bundled(golang(github.com/mvo5/goconfigparser))
+Provides:      bundled(golang(github.com/rivo/uniseg))
 Provides:      bundled(golang(github.com/seccomp/libseccomp-golang))
 Provides:      bundled(golang(github.com/snapcore/go-gettext))
+Provides:      bundled(golang(go.etcd.io/bbolt))
 Provides:      bundled(golang(golang.org/x/crypto/openpgp/armor))
 Provides:      bundled(golang(golang.org/x/crypto/openpgp/packet))
 Provides:      bundled(golang(golang.org/x/crypto/sha3))
@@ -504,7 +508,7 @@ providing packages with %{import_path} prefix.
 %if ! 0%{?with_bundled}
 %setup -q
 # Ensure there's no bundled stuff accidentally leaking in...
-rm -rf vendor/*
+rm -rf vendor c-vendor
 %else
 # Extract each tarball properly
 %setup -q -D -b 1
@@ -528,48 +532,95 @@ export GOPATH=$(pwd):%{gopath}
 # FIXME: move spec file really to a go.mod world instead of this hack
 rm -f go.mod
 export GO111MODULE=off
+# Ensure we do not pass -mod=foo argument to go, as we disable modules and go
+# does not allow us to do both.
+sed -e 's/-mod=readonly//g' -e 's/-mod=vendor//g' <packaging/snapd.mk >packaging/snapd2.mk
 
 # Generate version files
-./mkversion.sh "%{version}-%{release}"
+cat <<EOF >snapdtool/version_generated.go
+package snapdtool
 
-# see https://github.com/gofed/go-macros/blob/master/rpm/macros.d/macros.go-compilers-golang
-BUILDTAGS=
-%if 0%{?with_test_keys}
-BUILDTAGS="withtestkeys nosecboot structuredlogging"
-%else
-BUILDTAGS="nosecboot"
-%endif
+func init() {
+	Version = "%{version}-%{release}"
+}
+EOF
+
+cat <<EOF >cmd/VERSION
+%{version}-%{release}
+EOF
+
+cat <<EOF >data/info
+VERSION=%{version}-%{release}
+SNAPD_APPARMOR_REEXEC=0
+SNAPD_ASSERTS_FORMATS='{"account-key":1,"snap-declaration":6,"system-user":2}'
+EOF
 
 %if ! 0%{?with_bundled}
 # We don't need the snapcore fork for bolt - it is just a fix on ppc
 sed -e "s:github.com/snapcore/bolt:github.com/boltdb/bolt:g" -i advisor/*.go
 %endif
 
-# We have to build snapd first to prevent the build from
-# building various things from the tree without additional
-# set tags.
-%gobuild -o bin/snapd $GOFLAGS %{import_path}/cmd/snapd
-BUILDTAGS="${BUILDTAGS} nomanagers"
-%gobuild -o bin/snap $GOFLAGS %{import_path}/cmd/snap
-%gobuild -o bin/snap-failure $GOFLAGS %{import_path}/cmd/snap-failure
-%gobuild -o bin/snapd-apparmor $GOFLAGS %{import_path}/cmd/snapd-apparmor
-
-# To ensure things work correctly with base snaps,
-# snap-exec, snap-update-ns, and snapctl need to be built statically
-(
 %if 0%{?rhel} >= 7
     # since RH Developer tools 2018.4 (and later releases),
     # the go-toolset module is built with FIPS compliance that
     # defaults to using libcrypto.so which gets loaded at runtime via dlopen(),
     # disable that functionality for statically built binaries
-    BUILDTAGS="${BUILDTAGS} no_openssl"
+    EXTRA_TAGS="${EXTRA_TAGS} no_openssl"
 %endif
-    %gobuild_static -o bin/snap-exec $GOFLAGS %{import_path}/cmd/snap-exec
-    %gobuild_static -o bin/snap-update-ns $GOFLAGS %{import_path}/cmd/snap-update-ns
-    %gobuild_static -o bin/snapctl $GOFLAGS %{import_path}/cmd/snapctl
-)
 
-%gobuild -o bin/snap-seccomp $GOFLAGS %{import_path}/cmd/snap-seccomp
+# Generate snapd.defines.mk, this file is included by snapd.mk. It contains a
+# number of variable definitions that are set based on their RPM equivalents.
+# Since we can apply any conditional overrides here in the spec file we can
+# maintain one consistent set of variables across the spec and makefile worlds.
+cat >snapd.defines.mk <<__DEFINES__
+# This file is generated by Fedora's snapd.spec
+# Directory variables.
+prefix = %{_prefix}
+bindir = %{_bindir}
+sbindir = %{_sbindir}
+libexecdir = %{_libexecdir}
+mandir = %{_mandir}
+datadir = %{_datadir}
+localstatedir = %{_localstatedir}
+sharedstatedir = %{_sharedstatedir}
+unitdir = %{_unitdir}
+builddir = %{_builddir}
+# Build configuration
+with_core_bits = 0
+with_alt_snap_mount_dir = 1
+with_apparmor = 1
+with_testkeys = %{with_test_keys}
+with_vendor = %{with_bundled}
+# follow what %%gobuild does
+EXTRA_GO_BUILD_FLAGS = -v -x -compiler gc
+EXTRA_GO_LDFLAGS = -linkmode external -extldflags '%__global_ldflags'
+EXTRA_GO_STATIC_LDFLAGS = -linkmode external -extldflags '%__global_ldflags -static'
+EXTRA_GO_BUILD_TAGS = rpm_crashtraceback $EXTRA_TAGS
+__DEFINES__
+
+# Generate version files
+
+cat <<EOF >snapdtool/version_generated.go
+package snapdtool
+
+// generated by snapd.spec; do not edit
+
+func init() {
+	Version = "%{version}-%{release}"
+}
+EOF
+
+cat <<EOF >cmd/VERSION
+%{version}-%{release}
+EOF
+
+# FIXME: We paste a fixed string but we should run some go code to generate the
+# real value. We don't want to do that as that code needs to use host's
+# libraries without talking to the proxy.
+cat <<EOF >data/info
+SNAPD_APPARMOR_REEXEC=0
+SNAPD_ASSERTS_FORMATS='{"account-key":1,"snap-declaration":6,"system-user":2}'
+EOF
 
 %if 0%{?with_selinux}
 (
@@ -608,6 +659,11 @@ autoreconf --force --install --verbose
 
 %make_build %{!?with_valgrind:HAVE_VALGRIND=}
 popd
+
+# Build snap, snapd and other tools
+%make_build -f packaging/snapd2.mk \
+            SNAPD_DEFINES_DIR=$PWD \
+            all
 
 # Build systemd units, dbus services, and env files
 pushd ./data
@@ -655,26 +711,11 @@ install -d -p %{buildroot}%{_datadir}/selinux/devel/include/contrib
 install -d -p %{buildroot}%{_datadir}/selinux/packages
 %endif
 
-# Install snap and snapd
-install -p -m 0755 bin/snap %{buildroot}%{_bindir}
-install -p -m 0755 bin/snap-exec %{buildroot}%{_libexecdir}/snapd
-install -p -m 0755 bin/snap-failure %{buildroot}%{_libexecdir}/snapd
-install -p -m 0755 bin/snapd %{buildroot}%{_libexecdir}/snapd
-install -p -m 0755 bin/snap-update-ns %{buildroot}%{_libexecdir}/snapd
-install -p -m 0755 bin/snap-seccomp %{buildroot}%{_libexecdir}/snapd
-install -p -m 0755 bin/snapd-apparmor %{buildroot}%{_libexecdir}/snapd
-# Ensure /usr/bin/snapctl is a symlink to /usr/libexec/snapd/snapctl
-install -p -m 0755 bin/snapctl %{buildroot}%{_libexecdir}/snapd/snapctl
-ln -sf %{_libexecdir}/snapd/snapctl %{buildroot}%{_bindir}/snapctl
-
 %if 0%{?with_selinux}
 # Install SELinux module
 install -p -m 0644 data/selinux/snappy.if %{buildroot}%{_datadir}/selinux/devel/include/contrib
 install -p -m 0644 data/selinux/snappy.pp.bz2 %{buildroot}%{_datadir}/selinux/packages
 %endif
-
-# Install snap(8) man page
-bin/snap help --man > %{buildroot}%{_mandir}/man8/snap.8
 
 # Install the "info" data file with snapd version
 install -m 644 -D data/info %{buildroot}%{_libexecdir}/snapd/info
@@ -705,6 +746,12 @@ pushd ./data
               SNAPD_ENVIRONMENT_FILE="%{_sysconfdir}/sysconfig/snapd"
 popd
 
+# Install snap, snapd and tools
+# auto-remove unnecessary files and service units
+%make_install -f packaging/snapd2.mk \
+            SNAPD_DEFINES_DIR=$PWD \
+            install
+
 %if 0%{?rhel} == 7
 # Install kernel tweaks
 # See: https://access.redhat.com/articles/3128691
@@ -712,14 +759,7 @@ install -m 644 -D data/sysctl/rhel7-snap.conf %{buildroot}%{_sysctldir}/99-snap.
 %endif
 
 # Remove snappy core specific units
-rm -fv %{buildroot}%{_unitdir}/snapd.system-shutdown.service
-rm -fv %{buildroot}%{_unitdir}/snapd.snap-repair.*
-rm -fv %{buildroot}%{_unitdir}/snapd.core-fixup.*
-rm -fv %{buildroot}%{_unitdir}/snapd.recovery-chooser-trigger.service
-
-# Remove snappy core specific scripts and binaries
-rm %{buildroot}%{_libexecdir}/snapd/snapd.core-fixup.sh
-rm %{buildroot}%{_libexecdir}/snapd/system-shutdown
+rm -fv %{buildroot}%{_unitdir}/snapd.failure.service
 
 # Remove gpio-chardev ordering target
 rm -f %{buildroot}%{_unitdir}/snapd.gpio-chardev-setup.target
@@ -778,19 +818,14 @@ sort -u -o devel.file-list devel.file-list
 
 %check
 for binary in snap-exec snap-update-ns snapctl; do
-    ldd bin/$binary 2>&1 | grep 'not a dynamic executable'
+    ldd %{_builddir}/$binary 2>&1 | grep 'not a dynamic executable'
 done
 
 # snapd tests
 %if 0%{?with_check} && 0%{?with_unit_test} && 0%{?with_devel}
-%if ! 0%{?with_bundled}
-export GOPATH=%{buildroot}/%{gopath}:%{gopath}
-%else
-export GOPATH=%{buildroot}/%{gopath}:$(pwd)/Godeps/_workspace:%{gopath}
-%endif
-# FIXME: we are in the go.mod world now but without this things fall apart
-export GO111MODULE=off
-%gotest %{import_path}/...
+%make_build -f packaging/snapd2.mk \
+            SNAPD_DEFINES_DIR=$PWD \
+            check
 %endif
 
 # snap-confine tests (these always run!)
@@ -813,7 +848,6 @@ make -C data -k check
 %{_libexecdir}/snapd/snapctl
 %{_libexecdir}/snapd/snapd
 %{_libexecdir}/snapd/snap-exec
-%{_libexecdir}/snapd/snap-failure
 %{_libexecdir}/snapd/info
 %{_libexecdir}/snapd/snap-mgmt
 %{_libexecdir}/snapd/snapd-apparmor
@@ -832,8 +866,6 @@ make -C data -k check
 %{_systemd_system_env_generator_dir}/snapd-env-generator
 %{_unitdir}/snapd.socket
 %{_unitdir}/snapd.service
-%{_unitdir}/snapd.autoimport.service
-%{_unitdir}/snapd.failure.service
 %{_unitdir}/snapd.seeded.service
 %{_unitdir}/snapd.apparmor.service
 %{_unitdir}/snapd.mounts.target
@@ -872,13 +904,19 @@ make -C data -k check
 %dir %{_sharedstatedir}/snapd/mount
 %dir %{_sharedstatedir}/snapd/seccomp
 %dir %{_sharedstatedir}/snapd/seccomp/bpf
+%ghost %{_sharedstatedir}/snapd/seccomp/bpf/global.bin
 %dir %{_sharedstatedir}/snapd/snaps
 %dir %{_sharedstatedir}/snapd/snap
 %ghost %dir %{_sharedstatedir}/snapd/snap/bin
-%dir %{_localstatedir}/cache/snapd
-%dir %{_localstatedir}/snap
 %ghost %{_sharedstatedir}/snapd/state.json
+%ghost %{_sharedstatedir}/snapd/system-key
+%ghost %{_sharedstatedir}/snapd/snap/bin
 %ghost %{_sharedstatedir}/snapd/snap/README
+%dir %{_localstatedir}/cache/snapd
+%ghost %{_localstatedir}/cache/snapd/commands
+%ghost %{_localstatedir}/cache/snapd/names
+%ghost %{_localstatedir}/cache/snapd/sections
+%dir %{_localstatedir}/snap
 %if %{with snap_symlink}
 /snap
 %endif
@@ -999,8 +1037,123 @@ if [ $1 -eq 0 ]; then
 fi
 %endif
 
-
 %changelog
+* Thu Sep 15 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.71-1%{dist}.1
+- Rebuild for Amazon Linux
+
+* Fri Aug 22 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.71
+ - FDE: auto-repair when recovery key is used
+ - FDE: revoke keys on shim update
+ - FDE: revoke old TPM keys when dbx has been updated
+ - FDE: do not reseal FDE hook keys every time
+ - FDE: store keys in the kernel keyring when installing from initrd
+ - FDE: allow disabled DMA on Core
+ - FDE: snap-bootstrap: do not check for partition in scan-disk on
+   CVM
+ - FDE: support secboot preinstall check for 25.10+ hybrid installs
+   via the /v2/system/{label} endpoint
+ - FDE: support generating recovery key at install time via the
+   /v2/systems/{label} endpoint
+ - FDE: update passphrase quality check at install time via the
+   /v2/systems/{label} endpoint
+ - FDE: support replacing recovery key at runtime via the new
+   /v2/system-volumes endpoint
+ - FDE: support checking recovery keys at runtime via the /v2/system-
+   volumes endpoint
+ - FDE: support enumerating keyslots at runtime via the /v2/system-
+   volumes endpoint
+ - FDE: support changing passphrase at runtime via the /v2/system-
+   volumes endpoint
+ - FDE: support passphrase quality check at runtime via the
+   /v2/system-volumes endpoint
+ - FDE: update secboot to revision 3e181c8edf0f
+ - Confdb: support lists and indexed paths on read and write
+ - Confdb: alias references must be wrapped in brackets
+ - Confdb: support indexed paths in confdb-schema assertion
+ - Confdb: make API errors consistent with options
+ - Confdb: fetch confdb-schema assertion on access
+ - Confdb: prevent --previous from being used in read-side hooks
+ - Components: fix snap command with multiple components
+ - Components: set revision of seed components to x1
+ - Components: unmount extra kernel-modules components mounts
+ - AppArmor Prompting: add lifespan "session" for prompting rules
+ - AppArmor Prompting: support restoring prompts after snapd restart
+ - AppArmor Prompting: limit the extra information included in probed
+   AppArmor features and system key
+ - Notices: refactor notice state internals
+ - SELinux: look for restorecon/matchpathcon at all known locations
+   rather than current PATH
+ - SELinux: update policy to allow watching cgroups (for RAA), and
+   talking to user session agents (service mgmt/refresh)
+ - Refresh App Awareness: Fix unexpected inotify file descriptor
+   cleanup
+ - snap-confine: workaround for glibc fchmodat() fallback and handle
+   ENOSYS
+ - snap-confine: add support for host policy for limiting users able
+   to run snaps
+ - LP: #2114923 Reject system key mismatch advise when not yet seeded
+ - Use separate lanes for essential and non-essential snaps during
+   seeding and allow non-essential installs to retry
+ - Fix bug preventing remodel from core18 to core18 when snapd snap
+   is unchanged
+ - LP: #2112551 Make removal of last active revision of a snap equal
+   to snap remove
+ - LP: #2114779 Allow non-gpt in fallback mode to support RPi
+ - Switch from using systemd LogNamespace to manually controlled
+   journal quotas
+ - Change snap command trace logging to only log the command names
+ - Grant desktop-launch access to /v2/snaps
+ - Update code for creating the snap journal stream
+ - Switch from using core to snapd snap for snap debug connectivity
+ - LP: #2112544 Fix offline remodel case where we switched to a
+   channel without an actual refresh
+ - LP: #2112332 Exclude snap/snapd/preseeding when generating preseed
+   tarball
+ - LP: #1952500 Fix snap command progress reporting
+ - LP: #1849346 Interfaces: kerberos-tickets |  add new interface
+ - Interfaces: u2f | add support for Thetis Pro
+ - Interfaces: u2f | add OneSpan device and fix older device
+ - Interfaces: pipewire, audio-playback | support pipewire as system
+   daemon
+ - Interfaces: gpg-keys | allow access to GPG agent sockets
+ - Interfaces: usb-gadget | add new interface
+ - Interfaces: snap-fde-control, firmware-updater-support | add new
+   interfaces to support FDE
+ - Interfaces: timezone-control | extend to support timedatectl
+   varlink
+ - Interfaces: cpu-control | fix rules for accessing IRQ sysfs and
+   procfs directories
+ - Interfaces: microstack-support | allow SR-IOV attachments
+ - Interfaces: modify AppArmor template to allow snaps to read their
+   own systemd credentials
+ - Interfaces: posix-mq | allow stat on /dev/mqueue
+ - LP: #2098780 Interfaces: log-observe | add capability
+   dac_read_search
+ - Interfaces: block-devices | allow access to ZFS pools and datasets
+ - LP: #2033883 Interfaces: block-devices | opt-in access to
+   individual partitions
+ - Interfaces: accel | add new interface to support accel kernel
+   subsystem
+ - Interfaces: shutdown | allow client to bind on its side of dbus
+   socket
+ - Interfaces: modify seccomp template to allow pwritev2
+ - Interfaces: modify AppArmor template to allow reading
+   /proc/sys/fs/nr_open
+ - Packaging: drop snap.failure service for openSUSE
+ - Packaging: add SELinux support for openSUSE
+ - Packaging: disable optee when using nooptee build tag
+ - Packaging: add support for static PIE builds in snapd.mk, drop
+   pie.patch from openSUSE
+ - Packaging: add libcap2-bin runtime dependency for ubuntu-16.04
+ - Packaging: use snapd.mk for packaging on Fedora
+ - Packaging: exclude .git directory
+ - Packaging: fix DPKG_PARSECHANGELOG assignment
+ - Packaging: fix building on Fedora with dpkg installed
+
+* Fri Aug 15 2025 Maxwell G <maxwell@gtmx.me> - 2.70-3
+- Rebuild for golang-1.25.0
+
 * Thu Jul 31 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.70-1%{dist}.1
 - Rebuild for Amazon Linux
 
