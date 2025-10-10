@@ -84,7 +84,7 @@
 
 Name:           snapd
 Version:        2.71
-Release:        0%{?dist}
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -985,6 +985,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Fri Oct 10 2025 Alejandro Sáez <asm@redhat.com> - 2.71-1
+- rebuild
+
 * Fri Aug 22 2025 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.71
  - FDE: auto-repair when recovery key is used
