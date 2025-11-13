@@ -55,6 +55,11 @@
 %global snappy_svcs      snapd.service snapd.socket snapd.seeded.service snapd.apparmor.service snapd.mounts.target snapd.mounts-pre.target
 %global snappy_user_svcs snapd.session-agent.service snapd.session-agent.socket
 
+# Note that packaging for Fedora does omit cap_setgid and cap_setuid that are
+# only required to use snapd in user namespaces when the host system uses
+# cgroup-v1 hierarchy. Since no actively supported Fedora release uses cgroup
+# v1, those capabilities are omitted.
+%global snap_confine_caps cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin=p
 # Until we have a way to add more extldflags to gobuild macro...
 # Always use external linking when building static binaries.
 %if 0%{?fedora} || 0%{?rhel} >= 8
@@ -83,7 +88,7 @@
 %{!?_tmpfilesdir: %global _tmpfilesdir %{_prefix}/lib/tmpfiles.d}
 
 Name:           snapd
-Version:        2.71
+Version:        2.72
 Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
@@ -884,8 +889,9 @@ make -C data -k check
 %doc cmd/snap-confine/PORTING
 %license COPYING
 %dir %{_libexecdir}/snapd
-%caps(cap_dac_override,cap_dac_read_search,cap_sys_admin,cap_sys_chroot,cap_chown,cap_fowner,cap_sys_ptrace=p) %{_libexecdir}/snapd/snap-confine
+%caps(%{snap_confine_caps}) %{_libexecdir}/snapd/snap-confine
 %{_libexecdir}/snapd/snap-confine.caps
+%{_libexecdir}/snapd/snap-confine.v2-only.caps
 %{_libexecdir}/snapd/snap-device-helper
 %{_libexecdir}/snapd/snap-discard-ns
 %{_libexecdir}/snapd/snap-gdb-shim
@@ -985,6 +991,114 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Thu Nov 13 2025 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.72
+ - FDE: support replacing TPM protected keys at runtime via the
+   /v2/system-volumes endpoint
+ - FDE: support secboot preinstall check fix actions for 25.10+
+   hybrid installs via the /v2/system/{label} endpoint
+ - FDE: tweak polkit message to remove jargon
+ - FDE: ensure proper sealing with kernel command line defaults
+ - FDE: provide generic reseal function
+ - FDE: support using OPTEE for protecting keys, as an alternative to
+   existing fde-setup hooks (Ubuntu Core only)
+ - Confdb: 'snapctl get --view' supports passing default values
+ - Confdb: content sub-rules in confdb-schemas inherit their parent
+   rule's "access"
+ - Confdb: make confdb error kinds used in API more generic
+ - Confdb: fully support lists and indexed paths (including unset)
+ - Prompting: add notice backend for prompting types (unused for now)
+ - Prompting: include request cgroup in prompt
+ - Prompting: handle unsupported xattrs
+ - Prompting: add permission mapping for the camera interface
+ - Notices: read notices from state without state lock
+ - Notices: add methods to get notice fields and create, reoccur, and
+   deepcopy notice
+ - Notices: add notice manager to coordinate separate notice backends
+ - Notices: support draining notices from state when notice backend
+   registered as producer of a particular notice type
+ - Notices: query notice manager from daemon instead of querying
+   state for notices directly
+ - Packaging: Ubuntu | ignore .git directory
+ - Packaging: FIPS | bump deb Go FIPS to 1.23
+ - Packaging: snap | bump FIPS toolchain to 1.23
+ - Packaging: debian | sync most upstream changes
+ - Packaging: debian-sid | depends on libcap2-bin for postint
+ - Packaging: Fedora | drop fakeroot
+ - Packaging: snap | modify snapd.mk to pass build tags when running
+   unit tests
+ - Packaging: snap | modify snapd.mk to pass nooptee build tag
+ - Packaging: modify Makefile.am to fix snap-confine install profile
+   with 'make hack'
+ - Packaging: modify Makefile.am to fix out-of-tree use of 'make
+   hack'
+ - LP: #2122054 Snap installation: skip snap icon download when
+   running in a cloud or using a proxy store
+ - Snap installation: add timeout to http client when downloading
+   snap icon
+ - Snap installation: use http(s) proxy for icon downloads
+ - LP: #2117558 snap-confine: fix error message with /root/snap not
+   accessible
+ - snap-confine: fix non-suid limitation by switching to root:root to
+   operate v1 freezer
+ - core-initrd: do not use writable-paths when not available
+ - core-initrd: remove debian folder
+ - LP: #1916244 Interfaces: gpio-chardev | re-enable the gpio-chardev
+   interface now with the more robust gpio-aggregator configfs kernel
+   interface
+ - Interfaces: gpio-chardev | exclusive snap connections, raise a
+   conflict when both gpio-chardev and gpio are connected
+ - Interfaces: gpio-chardev | fix gpio-aggregator module load order
+ - Interfaces: ros-snapd-support | grant access to /v2/changes
+ - Interfaces: uda-driver-libs, egl-driver-libs, gbm-driver-libs,
+   opengl-driver-libs, opengles-driver-libs | new interfaces to
+   support nvidia driver components
+ - Interfaces: microstack-support | allow DPDK (hugepage related
+   permissions)
+ - Interfaces: system-observe | allow reading additional files in
+   /proc, needed by node-exporter
+ - Interfaces: u2f | add Cano Key, Thesis FIDO2 BioFP+ Security Key
+   and Kensington VeriMark DT Fingerprint Key to device list
+ - Interfaces: snap-interfaces-requests-control | allow shell API
+   control
+ - Interfaces: fwupd | allow access to Intel CVS sysfs
+ - Interfaces: hardware-observe | allow read access to Kernel
+   Samepage Merging (KSM)
+ - Interfaces: xilinx-dma | support Multi Queue DMA (QDMA) IP
+ - Interfaces: spi | relax sysfs permission rules to allow access to
+   SPI device node attributes
+ - Interfaces: content | introduce compatibility label
+ - LP: #2121238 Interfaces: do not expose Kerberos tickets for
+   classic snaps
+ - Interfaces: ssh-public-keys | allow ro access to public host keys
+   with ssh-key
+ - Interfaces: Modify AppArmor template to allow listing systemd
+   credentials and invoking systemd-creds
+ - Interfaces: modify AppArmor template with workarounds for Go 1.35
+   cgroup aware GOMAXPROCS
+ - Interfaces: modify seccomp template to allow landlock_*
+ - Prevent snap hooks from running while relevant snaps are unlinked
+ - Make refreshes wait before unlinking snaps if running hooks can be
+   affected
+ - Fix systemd unit generation by moving "WantedBy=" from section
+   "unit" to "install"
+ - Add opt-in logging support for snap-update-ns
+ - Unhide 'snap help' sign and export-key under Development category
+ - LP: #2117121 Cleanly support socket activation for classic snap
+ - Add architecture to 'snap version' output
+ - Add 'snap debug api' option to disable authentication through
+   auth.json
+ - Show grade in notes for 'snap info --verbose'
+ - Fix preseeding failure due to scan-disk issue on RPi
+ - Support 'snap debug api' queries to user session agents
+ - LP: #2112626 Improve progress reporting for snap install/refresh
+ - Drop legacy BAMF_DESKTOP_FILE_HINT in desktop files
+ - Fix /v2/apps error for root user when user services are present
+ - LP: #2114704 Extend output to indicate when snap data snapshot was
+   created during remove
+ - Improve how we handle emmc volumes
+ - Improve handling of system-user extra assertions
+
 * Fri Oct 10 2025 Alejandro Sáez <asm@redhat.com> - 2.71-1
 - rebuild
 
