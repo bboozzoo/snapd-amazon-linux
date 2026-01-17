@@ -89,7 +89,7 @@
 
 Name:           snapd
 Version:        2.72
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -991,6 +991,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Sat Jan 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.72-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_44_Mass_Rebuild
+
 * Thu Nov 13 2025 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.72
  - FDE: support replacing TPM protected keys at runtime via the
