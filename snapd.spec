@@ -89,7 +89,7 @@
 
 Name:           snapd
 Version:        2.72
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -991,6 +991,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Tue Feb 03 2026 Maxwell G <maxwell@gtmx.me> - 2.72-3
+- Rebuild for https://fedoraproject.org/wiki/Changes/golang1.26
+
 * Sat Jan 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.72-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_44_Mass_Rebuild
 
