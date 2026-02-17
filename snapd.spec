@@ -1,11 +1,3 @@
-# With Fedora, nothing is bundled. For everything else, bundling is used.
-# To use bundled stuff, use "--with vendorized" on rpmbuild
-%if 0%{?fedora}
-%bcond_with vendorized
-%else
-%bcond_without vendorized
-%endif
-
 # A switch to allow building the package with support for testkeys which
 # are used for the spread test suite of snapd.
 %bcond_with testkeys
@@ -26,11 +18,8 @@
 %global with_valgrind 1
 %endif
 
-%if ! %{with vendorized}
-%global with_bundled 0
-%else
+# We are always using vendored Go dependencies
 %global with_bundled 1
-%endif
 
 %if ! %{with testkeys}
 %global with_test_keys 0
@@ -89,7 +78,7 @@
 
 Name:           snapd
 Version:        2.72
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -991,6 +980,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Tue Feb 17 2026 Neal Gompa <ngompa@fedoraproject.org> - 2.72-4
+- Default to vendored Go dependencies in Fedora
+
 * Tue Feb 03 2026 Maxwell G <maxwell@gtmx.me> - 2.72-3
 - Rebuild for https://fedoraproject.org/wiki/Changes/golang1.26
 
