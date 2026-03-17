@@ -36,11 +36,8 @@
 %global with_valgrind 1
 %endif
 
-%if ! %{with vendorized}
-%global with_bundled 0
-%else
+# We are always using vendored Go dependencies
 %global with_bundled 1
-%endif
 
 %if ! %{with testkeys}
 %global with_test_keys 0
@@ -106,7 +103,7 @@
 %endif
 
 Name:           snapd
-Version:        2.72
+Version:        2.74.1
 Release:        1%{?dist}.1
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
@@ -120,6 +117,7 @@ ExclusiveArch:  %{?golang_arches}%{!?golang_arches:%{ix86} x86_64 %{arm} aarch64
 BuildRequires: make
 BuildRequires:  %{?go_compiler:compiler(go-compiler)}%{!?go_compiler:golang >= 1.9}
 BuildRequires:  systemd
+BuildRequires:  squashfs-tools
 %{?systemd_requires}
 
 Requires:       snap-confine%{?_isa} = %{version}-%{release}
@@ -674,7 +672,8 @@ popd
 pushd ./data
 make BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}" DATADIR="%{_datadir}" \
      SYSTEMDSYSTEMUNITDIR="%{_unitdir}" \
-     SNAP_MOUNT_DIR="%{_sharedstatedir}/snapd/snap" \
+     USE_CANONICAL_SNAP_MOUNT_DIR=false \
+     USE_ALT_SNAP_MOUNT_DIR=true \
      SNAPD_ENVIRONMENT_FILE="%{_sysconfdir}/sysconfig/snapd"
 popd
 
@@ -733,6 +732,9 @@ install -m 644 -D data/completion/bash/etelpmoc.sh %{buildroot}%{_libexecdir}/sn
 install -d -p %{buildroot}%{_datadir}/zsh/site-functions
 install -m 644 -D data/completion/zsh/_snap %{buildroot}%{_datadir}/zsh/site-functions/_snap
 
+# Install the NEWS file
+install -pm 644 -D NEWS.md %{buildroot}%{_defaultdocdir}/snapd/NEWS.md
+
 # Install snap-confine
 pushd ./cmd
 %make_install
@@ -747,7 +749,8 @@ pushd ./data
 %make_install BINDIR="%{_bindir}" LIBEXECDIR="%{_libexecdir}" DATADIR="%{_datadir}" \
               SYSTEMDSYSTEMUNITDIR="%{_unitdir}" SYSTEMDUSERUNITDIR="%{_userunitdir}" \
               TMPFILESDIR="%{_tmpfilesdir}" \
-              SNAP_MOUNT_DIR="%{_sharedstatedir}/snapd/snap" \
+              USE_CANONICAL_SNAP_MOUNT_DIR=false \
+              USE_ALT_SNAP_MOUNT_DIR=true \
               SNAPD_ENVIRONMENT_FILE="%{_sysconfdir}/sysconfig/snapd"
 popd
 
@@ -888,6 +891,7 @@ make -C data -k check
 %{_datadir}/fish/vendor_conf.d/snapd.fish
 %{_datadir}/snapd/snapcraft-logo-bird.svg
 %{_sysconfdir}/xdg/autostart/snap-userd-autostart.desktop
+%doc %{_defaultdocdir}/snapd/NEWS.md
 %config(noreplace) %{_sysconfdir}/sysconfig/snapd
 %dir %{_sharedstatedir}/snapd
 %dir %{_sharedstatedir}/snapd/assertions
@@ -915,7 +919,6 @@ make -C data -k check
 %ghost %dir %{_sharedstatedir}/snapd/snap/bin
 %ghost %{_sharedstatedir}/snapd/state.json
 %ghost %{_sharedstatedir}/snapd/system-key
-%ghost %{_sharedstatedir}/snapd/snap/bin
 %ghost %{_sharedstatedir}/snapd/snap/README
 %dir %{_localstatedir}/cache/snapd
 %ghost %{_localstatedir}/cache/snapd/commands
@@ -940,8 +943,8 @@ make -C data -k check
 %{_libexecdir}/snapd/snap-confine.v2-only.caps
 %{_libexecdir}/snapd/snap-device-helper
 %{_libexecdir}/snapd/snap-discard-ns
-%{_libexecdir}/snapd/snap-gdb-shim
 %{_libexecdir}/snapd/snap-gdbserver-shim
+%{_libexecdir}/snapd/snap-strace-shim
 %{_libexecdir}/snapd/snap-seccomp
 %{_libexecdir}/snapd/snap-update-ns
 %{_mandir}/man8/snap-confine.8*
@@ -1044,6 +1047,31 @@ fi
 %endif
 
 %changelog
+* Mon Mar 16 2026 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.74.1-1%{dist}.1
+- Rebuild for Amazon Linux
+
+* Fri Mar 13 2026 Ernest Lotter <ernest.lotter@canonical.com>
+- New upstream release 2.74.1
+ - FDE: measure DeployedMode and AuditMode variables if they appear
+   as disabled in the event log to avoid a potential reseal-failure
+   boot loop
+ - LP: #2139611 FDE: fix db updates by allowing multiple payloads
+ - LP: #2139300 snap-confine: add CAP_SYS_RESOURCE to allow raising
+   memory lock limit when required
+ - LP: #2139099 snap-confine: bump the max element count of the BPF
+   map used to store IDs of allowed/matched devices to 1000
+ - Interfaces: Added pidfd_open and memfd_secret to seccomp template
+ - Interfaces: camera | add locking permission for /dev/video
+
+* Tue Feb 17 2026 Neal Gompa <ngompa@fedoraproject.org> - 2.72-4
+- Default to vendored Go dependencies in Fedora
+
+* Tue Feb 03 2026 Maxwell G <maxwell@gtmx.me> - 2.72-3
+- Rebuild for https://fedoraproject.org/wiki/Changes/golang1.26
+
+* Sat Jan 17 2026 Fedora Release Engineering <releng@fedoraproject.org> - 2.72-2
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_44_Mass_Rebuild
+
 * Tue Nov 18 2025 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.72-1%{dist}.1
 - Rebuild for Amazon Linux
 
