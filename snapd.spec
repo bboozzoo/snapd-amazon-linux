@@ -48,7 +48,7 @@
 # only required to use snapd in user namespaces when the host system uses
 # cgroup-v1 hierarchy. Since no actively supported Fedora release uses cgroup
 # v1, those capabilities are omitted.
-%global snap_confine_caps cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin=p
+%global snap_confine_caps cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin,cap_sys_resource=p
 # Until we have a way to add more extldflags to gobuild macro...
 # Always use external linking when building static binaries.
 %if 0%{?fedora} || 0%{?rhel} >= 8
@@ -78,7 +78,7 @@
 
 Name:           snapd
 Version:        2.74.1
-Release:        0%{?dist}
+Release:        1%{?dist}
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
 URL:            https://%{provider_prefix}
@@ -986,6 +986,9 @@ if [ $1 -eq 0 ]; then
 fi
 
 %changelog
+* Wed Mar 18 2026 Zygmunt Krynicki <me@zygoon.pl> - 2.74.1-1
+- Fix missing cap_sys_resource on snap-confine
+
 * Fri Mar 13 2026 Ernest Lotter <ernest.lotter@canonical.com>
 - New upstream release 2.74.1
  - FDE: measure DeployedMode and AuditMode variables if they appear
