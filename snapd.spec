@@ -66,7 +66,7 @@
 # only required to use snapd in user namespaces when the host system uses
 # cgroup-v1 hierarchy. Since no actively supported Fedora release uses cgroup
 # v1, those capabilities are omitted.
-%global snap_confine_caps cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin=p
+%global snap_confine_caps cap_chown,cap_dac_override,cap_dac_read_search,cap_fowner,cap_sys_chroot,cap_sys_ptrace,cap_sys_admin,cap_sys_resource=p
 # Until we have a way to add more extldflags to gobuild macro...
 # Always use external linking when building static binaries.
 %if 0%{?fedora} || 0%{?rhel} >= 8 || 0%{?amzn2023}
@@ -103,7 +103,7 @@
 %endif
 
 Name:           snapd
-Version:        2.74.1
+Version:        2.75.2
 Release:        1%{?dist}.1
 Summary:        A transactional software package manager
 License:        GPL-3.0-only
@@ -890,8 +890,8 @@ make -C data -k check
 %{_datadir}/applications/io.snapcraft.SessionAgent.desktop
 %{_datadir}/fish/vendor_conf.d/snapd.fish
 %{_datadir}/snapd/snapcraft-logo-bird.svg
+%{_prefix}/lib/dracut/dracut.conf.d/50-snapd.conf
 %{_sysconfdir}/xdg/autostart/snap-userd-autostart.desktop
-%doc %{_defaultdocdir}/snapd/NEWS.md
 %config(noreplace) %{_sysconfdir}/sysconfig/snapd
 %dir %{_sharedstatedir}/snapd
 %dir %{_sharedstatedir}/snapd/assertions
@@ -933,6 +933,9 @@ make -C data -k check
 %dir %{_datadir}/zsh/site-functions
 # similar case for fish
 %dir %{_datadir}/fish/vendor_conf.d
+
+%dir %{_defaultdocdir}/snapd
+%{_defaultdocdir}/snapd/NEWS.md
 
 %files -n snap-confine
 %doc cmd/snap-confine/PORTING
@@ -1047,6 +1050,16 @@ fi
 %endif
 
 %changelog
+* Tue May 05 2026 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.75.2-1%{dist}.1
+- Rebuild for Amazon Linux
+
+* Fri Apr 17 2026 Katie May <katie.may@canonical.com>
+- New upstream release 2.75.2
+  See NEWS file for details.
+
+* Wed Mar 18 2026 Zygmunt Krynicki <me@zygoon.pl> - 2.74.1-1
+- Fix missing cap_sys_resource on snap-confine
+
 * Mon Mar 16 2026 Maciek Borzecki <maciek.borzecki@gmail.com> - 2.74.1-1%{dist}.1
 - Rebuild for Amazon Linux
 
